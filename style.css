@@ -1,0 +1,171 @@
+body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
+canvas { display: block; }
+#info {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    background: rgba(0,0,0,0.7);
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 14px;
+    line-height: 1.6;
+}
+#controls {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    color: white;
+    background: rgba(0,0,0,0.7);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+#menu {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    min-width: 280px;
+    background: rgba(0,0,0,0.8);
+    border-radius: 5px;
+    overflow: hidden;
+    transition: width 0.3s;
+}
+#menu.collapsed {
+    width: 40px;
+}
+#menu-header {
+    padding: 10px;
+    background: rgba(50,50,50,0.9);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    font-weight: bold;
+}
+#menu-toggle {
+    font-size: 18px;
+    user-select: none;
+}
+#menu-content {
+    padding: 10px;
+    color: white;
+}
+#menu.collapsed #menu-content {
+    display: none;
+}
+#menu.collapsed #menu-header span:first-child {
+    display: none;
+}
+.menu-item {
+    margin: 5px 0;
+    position: relative;
+}
+.hidden-checkbox {
+    display: none;
+}
+.button-label {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background: rgba(70,70,70,0.5);
+    border: 2px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s ease;
+    user-select: none;
+    box-sizing: border-box;
+}
+.button-label:hover {
+    background: rgba(90,90,90,0.7);
+    border-color: rgba(255,255,255,0.4);
+}
+.hidden-checkbox:checked + .button-label {
+    background: rgba(100,200,100,0.4);
+    border-color: rgba(100,255,100,0.6);
+}
+.dimension-row {
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 12px;
+}
+.dimension-row:last-child {
+    border-bottom: none;
+}
+.dimension-label {
+    font-weight: bold;
+    color: #aaa;
+    display: inline-block;
+    width: 60px;
+}
+.dimension-value {
+    color: #fff;
+}
+#parts-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    width: 90%;
+    max-width: 1400px;
+}
+#parts-overlay.active {
+    display: block;
+}
+.parts-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    align-items: center;
+}
+.parts-row {
+    display: flex;
+    gap: 50px;
+    align-items: center;
+    justify-content: center;
+}
+.panel {
+    background: #d4a574 url('plywood.jpg');
+    background-size: cover;
+    background-position: center;
+    border: 3px solid #333;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.panel-2x2 {
+    width: 180px;
+    height: 180px;
+}
+.panel-2x5 {
+    width: 180px;
+    height: 450px;
+}
+.panel-label {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+    text-shadow: 0 0 3px rgba(255,255,255,0.8);
+}
+.dim-label {
+    position: absolute;
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    text-shadow: 0 0 3px rgba(255,255,255,0.8);
+}
+.dim-width {
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+.dim-height {
+    right: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+}

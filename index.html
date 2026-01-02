@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vending Machine Frame</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="info">
+        <strong>Vending Machine Internal Frame</strong><br>
+        Dimensions: 24"W × 60"H × 24"D<br>
+        Grid: 3 across × 5 down = 15 slots<br>
+        Slot size: 8"W × 10"H × 18"D<br>
+        Collection area: 10"H (bottom)
+    </div>
+    <div id="controls">
+        Scroll to rotate | Shift+Scroll to zoom | Drag to rotate
+    </div>
+    <div id="menu">
+        <div id="menu-header">
+            <span>Menu</span>
+            <span id="menu-toggle">☰</span>
+        </div>
+        <div id="menu-content">
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-cutlist" class="hidden-checkbox">
+                <label for="toggle-cutlist" class="button-label">Cut List View</label>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-external" class="hidden-checkbox" checked>
+                <label for="toggle-external" class="button-label">External Frame</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-shelves" class="hidden-checkbox" checked>
+                <label for="toggle-shelves" class="button-label">Shelves</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-rails" class="hidden-checkbox" checked>
+                <label for="toggle-rails" class="button-label">Rails</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-dividers" class="hidden-checkbox" checked>
+                <label for="toggle-dividers" class="button-label">Dividers</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-glass" class="hidden-checkbox" checked>
+                <label for="toggle-glass" class="button-label">Glass Front</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-motors" class="hidden-checkbox" checked>
+                <label for="toggle-motors" class="button-label">Motors</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-clamps" class="hidden-checkbox" checked>
+                <label for="toggle-clamps" class="button-label">Clamps</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-spirals" class="hidden-checkbox" checked>
+                <label for="toggle-spirals" class="button-label">Spirals</label>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-pause" class="hidden-checkbox">
+                <label for="toggle-pause" class="button-label">Pause & Front View</label>
+            </div>
+            <div style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">
+                <div style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">Dimensions</div>
+                <div class="dimension-row">
+                    <span class="dimension-label">Width:</span>
+                    <span class="dimension-value">24" / 61cm / 2ft / 0.61m</span>
+                </div>
+                <div class="dimension-row">
+                    <span class="dimension-label">Height:</span>
+                    <span class="dimension-value">60" / 152cm / 5ft / 1.52m</span>
+                </div>
+                <div class="dimension-row">
+                    <span class="dimension-label">Depth:</span>
+                    <span class="dimension-value">24" / 61cm / 2ft / 0.61m</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="parts-overlay">
+        <div class="parts-layout">
+            <div class="parts-row">
+                <div class="panel panel-2x2">
+                    <div class="panel-label">Top</div>
+                    <div class="dim-label dim-width">2ft</div>
+                    <div class="dim-label dim-height">2ft</div>
+                </div>
+                <div class="panel panel-2x2">
+                    <div class="panel-label">Bottom</div>
+                    <div class="dim-label dim-width">2ft</div>
+                    <div class="dim-label dim-height">2ft</div>
+                </div>
+            </div>
+            <div class="parts-row">
+                <div class="panel panel-2x5">
+                    <div class="panel-label">Back</div>
+                    <div class="dim-label dim-width">2ft</div>
+                    <div class="dim-label dim-height">5ft</div>
+                </div>
+                <div class="panel panel-2x5">
+                    <div class="panel-label">Side</div>
+                    <div class="dim-label dim-width">2ft</div>
+                    <div class="dim-label dim-height">5ft</div>
+                </div>
+                <div class="panel panel-2x5">
+                    <div class="panel-label">Side</div>
+                    <div class="dim-label dim-width">2ft</div>
+                    <div class="dim-label dim-height">5ft</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        let scene, camera, renderer;
+        let frameGroup, externalFrame, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup;
+        let shelvesGroup, railsGroup, dividersGroup;
+        let mouseDown = false, mouseX = 0, mouseY = 0;
+        let isPartsView = false;
+        let isPaused = false;
+        let defaultCameraPos = { x: 50, y: 40, z: 70 };
+
+        function init() {
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(50, 40, 70);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 10, 10);
+            scene.add(directionalLight);
+
+            // Frame group
+            frameGroup = new THREE.Group();
+            scene.add(frameGroup);
+
+            // External frame group (outer box)
+            externalFrame = new THREE.Group();
+            frameGroup.add(externalFrame);
+
+            // Internal frame group (shelves and dividers)
+            internalFrame = new THREE.Group();
+            frameGroup.add(internalFrame);
+
+            // Rack system groups (separate for shelves, rails, dividers)
+            shelvesGroup = new THREE.Group();
+            frameGroup.add(shelvesGroup);
+
+            railsGroup = new THREE.Group();
+            frameGroup.add(railsGroup);
+
+            dividersGroup = new THREE.Group();
+            frameGroup.add(dividersGroup);
+
+            // Dispensing mechanism groups (separate for motors, clamps, spirals)
+            motorsGroup = new THREE.Group();
+            frameGroup.add(motorsGroup);
+
+            clampsGroup = new THREE.Group();
+            frameGroup.add(clampsGroup);
+
+            spiralsGroup = new THREE.Group();
+            frameGroup.add(spiralsGroup);
+
+            // Materials
+            const textureLoader = new THREE.TextureLoader();
+            const plywoodTexture = textureLoader.load('plywood.jpg');
+            plywoodTexture.wrapS = THREE.RepeatWrapping;
+            plywoodTexture.wrapT = THREE.RepeatWrapping;
+
+            const plywoodSideTexture = textureLoader.load('plywood-side.jpg');
+            plywoodSideTexture.wrapS = THREE.RepeatWrapping;
+            plywoodSideTexture.wrapT = THREE.RepeatWrapping;
+
+            const plywoodMat = new THREE.MeshPhongMaterial({
+                map: plywoodTexture,
+                side: THREE.DoubleSide
+            });
+
+            const plywoodSideMat = new THREE.MeshPhongMaterial({
+                map: plywoodSideTexture,
+                side: THREE.DoubleSide
+            });
+            const edgeMat = new THREE.MeshPhongMaterial({
+                color: 0x8b6f47
+            });
+            const glassMat = new THREE.MeshPhongMaterial({
+                color: 0x88ccff,
+                transparent: true,
+                opacity: 0.3,
+                side: THREE.DoubleSide,
+                shininess: 100
+            });
+
+            // Mechanism materials
+            const motorMat = new THREE.MeshPhongMaterial({
+                color: 0x333333,
+                shininess: 30
+            });
+            const bracketMat = new THREE.MeshPhongMaterial({
+                color: 0x666666,
+                shininess: 20
+            });
+            const spiralMat = new THREE.MeshPhongMaterial({
+                color: 0xaaaaaa,
+                shininess: 80,
+                metalness: 0.8
+            });
+
+            // Dimensions in inches (scaled down for display)
+            const width = 24, height = 60, depth = 24;
+            const shelfDepth = 18; // Shelves are shallower to create collection area
+            const thickness = 0.33;
+
+            // Back panel (external)
+            const back = new THREE.Mesh(
+                new THREE.BoxGeometry(width, height, thickness),
+                plywoodSideMat
+            );
+            back.position.z = -depth/2;
+            externalFrame.add(back);
+
+            // Side panels (external)
+            const leftSide = new THREE.Mesh(
+                new THREE.BoxGeometry(thickness, height, depth),
+                plywoodMat
+            );
+            leftSide.position.x = -width/2;
+            externalFrame.add(leftSide);
+
+            const rightSide = new THREE.Mesh(
+                new THREE.BoxGeometry(thickness, height, depth),
+                plywoodMat
+            );
+            rightSide.position.x = width/2;
+            externalFrame.add(rightSide);
+
+            // Top and bottom (external)
+            const top = new THREE.Mesh(
+                new THREE.BoxGeometry(width, thickness, depth),
+                plywoodMat
+            );
+            top.position.y = height/2;
+            externalFrame.add(top);
+
+            const bottom = new THREE.Mesh(
+                new THREE.BoxGeometry(width, thickness, depth),
+                plywoodMat
+            );
+            bottom.position.y = -height/2;
+            externalFrame.add(bottom);
+
+            // Glass front panel (covers only product area - rows 1-5)
+            const glassHeight = 50; // 5 rows × 10" each
+            glassFront = new THREE.Mesh(
+                new THREE.BoxGeometry(width, glassHeight, thickness),
+                glassMat
+            );
+            glassFront.position.set(0, 5, shelfDepth/2 + 2); // Centered on rows 1-5, 2" in front of shelves
+            frameGroup.add(glassFront);
+
+            // Collection bin floor (slanted panel at bottom)
+            const binFloor = new THREE.Mesh(
+                new THREE.BoxGeometry(width, thickness, depth - 6),
+                plywoodMat
+            );
+            binFloor.position.set(0, -height/2 + 3, 3); // Positioned in collection area, touching bottom
+            binFloor.rotation.x = 0.3; // Slight forward tilt
+            internalFrame.add(binFloor);
+
+            // Horizontal shelves (racks - 5 shelves to create 6 rows)
+            for (let i = 1; i <= 5; i++) {
+                const shelf = new THREE.Mesh(
+                    new THREE.BoxGeometry(width, thickness, shelfDepth),
+                    plywoodMat
+                );
+                shelf.position.y = -height/2 + (i * 10);
+                shelf.position.z = -(depth - shelfDepth) / 2; // Align with back
+                shelvesGroup.add(shelf);
+            }
+
+            // Sliding rails (structural tracks below each shelf - 5 rails)
+            const railMat = new THREE.MeshPhongMaterial({
+                color: 0x777777,
+                shininess: 40,
+                metalness: 0.6
+            });
+            const railHeight = 0.5; // Thin rail
+            const railWidth = 1; // Rail width
+            const railGap = 1; // Distance below shelf
+
+            for (let i = 1; i <= 5; i++) {
+                // Left rail
+                const leftRail = new THREE.Mesh(
+                    new THREE.BoxGeometry(railWidth, railHeight, shelfDepth),
+                    railMat
+                );
+                leftRail.position.y = -height/2 + (i * 10) - railGap;
+                leftRail.position.x = -width/2 + 2;
+                leftRail.position.z = -(depth - shelfDepth) / 2;
+                railsGroup.add(leftRail);
+
+                // Right rail
+                const rightRail = new THREE.Mesh(
+                    new THREE.BoxGeometry(railWidth, railHeight, shelfDepth),
+                    railMat
+                );
+                rightRail.position.y = -height/2 + (i * 10) - railGap;
+                rightRail.position.x = width/2 - 2;
+                rightRail.position.z = -(depth - shelfDepth) / 2;
+                railsGroup.add(rightRail);
+            }
+
+            // Vertical dividers (half-height - 2 per rack = 10 total, rows 1-5 only)
+            const dividerHeight = 5; // Half the row height
+            for (let row = 1; row < 6; row++) {
+                const yPos = -height/2 + (row * 10) + dividerHeight/2; // Position on top of shelf
+
+                // First divider at 8" from left
+                const div1 = new THREE.Mesh(
+                    new THREE.BoxGeometry(thickness, dividerHeight, shelfDepth),
+                    plywoodMat
+                );
+                div1.position.set(-width/2 + 8, yPos, -(depth - shelfDepth) / 2);
+                dividersGroup.add(div1);
+
+                // Second divider at 16" from left
+                const div2 = new THREE.Mesh(
+                    new THREE.BoxGeometry(thickness, dividerHeight, shelfDepth),
+                    plywoodMat
+                );
+                div2.position.set(-width/2 + 16, yPos, -(depth - shelfDepth) / 2);
+                dividersGroup.add(div2);
+            }
+
+            // Dispensing mechanisms (motors, brackets, and spirals for all 15 slots)
+            const slotWidth = 8;
+            const slotHeight = 10;
+            const motorRadius = 1;
+            const motorLength = 2.5;
+            const bracketWidth = 2;
+            const bracketHeight = 2;
+            const bracketThickness = 0.2;
+            const spiralRadius = 3;
+            const spiralLength = 14; // Extends ~80% of slot depth
+
+            for (let row = 1; row < 6; row++) {
+                for (let col = 0; col < 3; col++) {
+                    const xPos = -width/2 + (col * slotWidth) + (slotWidth / 2);
+                    const yPos = -height/2 + (row * slotHeight) + (slotHeight / 2);
+                    const zBack = -(depth - shelfDepth) / 2 - shelfDepth / 2;
+
+                    // Motor (cylinder at back)
+                    const motor = new THREE.Mesh(
+                        new THREE.CylinderGeometry(motorRadius, motorRadius, motorLength, 16),
+                        motorMat
+                    );
+                    motor.rotation.z = Math.PI / 2; // Rotate to horizontal
+                    motor.position.set(xPos, yPos, zBack + 1);
+                    motorsGroup.add(motor);
+
+                    // Mounting bracket (flat box behind motor)
+                    const bracket = new THREE.Mesh(
+                        new THREE.BoxGeometry(bracketWidth, bracketHeight, bracketThickness),
+                        bracketMat
+                    );
+                    bracket.position.set(xPos, yPos, zBack - 0.5);
+                    clampsGroup.add(bracket);
+
+                    // Spiral coil (helix from motor to front)
+                    const spiralCurve = new THREE.CurvePath();
+                    const turns = 8;
+                    const points = [];
+                    for (let i = 0; i <= 100; i++) {
+                        const t = i / 100;
+                        const angle = t * turns * Math.PI * 2;
+                        const x = Math.cos(angle) * spiralRadius;
+                        const y = Math.sin(angle) * spiralRadius;
+                        const z = t * spiralLength;
+                        points.push(new THREE.Vector3(x, y, z));
+                    }
+                    const curve = new THREE.CatmullRomCurve3(points);
+                    const spiral = new THREE.Mesh(
+                        new THREE.TubeGeometry(curve, 200, 0.15, 8, false),
+                        spiralMat
+                    );
+                    // No rotation needed - spiral already extends in Z direction
+                    spiral.position.set(xPos, yPos, zBack + 2);
+                    spiralsGroup.add(spiral);
+                }
+            }
+
+            // Add wireframe edges for clarity (external)
+            const edges = new THREE.EdgesGeometry(new THREE.BoxGeometry(width, height, depth));
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x000000 }));
+            externalFrame.add(line);
+
+            // Mouse controls
+            renderer.domElement.addEventListener('mousedown', onMouseDown);
+            renderer.domElement.addEventListener('mousemove', onMouseMove);
+            renderer.domElement.addEventListener('mouseup', onMouseUp);
+            renderer.domElement.addEventListener('wheel', onWheel);
+
+            window.addEventListener('resize', onWindowResize);
+
+            // Menu controls
+            const menuHeader = document.getElementById('menu-header');
+            const menu = document.getElementById('menu');
+            const toggleCutlist = document.getElementById('toggle-cutlist');
+            const toggleExternal = document.getElementById('toggle-external');
+            const toggleShelves = document.getElementById('toggle-shelves');
+            const toggleRails = document.getElementById('toggle-rails');
+            const toggleDividers = document.getElementById('toggle-dividers');
+            const toggleGlass = document.getElementById('toggle-glass');
+            const toggleMotors = document.getElementById('toggle-motors');
+            const toggleClamps = document.getElementById('toggle-clamps');
+            const toggleSpirals = document.getElementById('toggle-spirals');
+            const togglePause = document.getElementById('toggle-pause');
+            const partsOverlay = document.getElementById('parts-overlay');
+
+            menuHeader.addEventListener('click', () => {
+                menu.classList.toggle('collapsed');
+            });
+
+            toggleCutlist.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    // Switch to parts view
+                    isPartsView = true;
+                    renderer.domElement.style.display = 'none';
+                    partsOverlay.classList.add('active');
+                    document.body.style.background = '#d4a574';
+
+                    // Uncheck frame toggles
+                    toggleExternal.checked = false;
+                    toggleShelves.checked = false;
+                    toggleRails.checked = false;
+                    toggleDividers.checked = false;
+                } else {
+                    // Return to 3D view
+                    isPartsView = false;
+                    renderer.domElement.style.display = 'block';
+                    partsOverlay.classList.remove('active');
+                    document.body.style.background = '';
+
+                    // Re-enable and check frame toggles
+                    toggleExternal.checked = true;
+                    toggleShelves.checked = true;
+                    toggleRails.checked = true;
+                    toggleDividers.checked = true;
+                    externalFrame.visible = true;
+                    shelvesGroup.visible = true;
+                    railsGroup.visible = true;
+                    dividersGroup.visible = true;
+                }
+            });
+
+            toggleExternal.addEventListener('change', (e) => {
+                externalFrame.visible = e.target.checked;
+            });
+
+            toggleShelves.addEventListener('change', (e) => {
+                shelvesGroup.visible = e.target.checked;
+            });
+
+            toggleRails.addEventListener('change', (e) => {
+                railsGroup.visible = e.target.checked;
+            });
+
+            toggleDividers.addEventListener('change', (e) => {
+                dividersGroup.visible = e.target.checked;
+            });
+
+            toggleGlass.addEventListener('change', (e) => {
+                glassFront.visible = e.target.checked;
+            });
+
+            toggleMotors.addEventListener('change', (e) => {
+                motorsGroup.visible = e.target.checked;
+            });
+
+            toggleClamps.addEventListener('change', (e) => {
+                clampsGroup.visible = e.target.checked;
+            });
+
+            toggleSpirals.addEventListener('change', (e) => {
+                spiralsGroup.visible = e.target.checked;
+            });
+
+            togglePause.addEventListener('change', (e) => {
+                isPaused = e.target.checked;
+
+                if (isPaused) {
+                    // Rotate to show the front (glass side) facing the camera
+                    // Camera is at (50, 40, 70), so rotate Y to face front toward camera
+                    frameGroup.rotation.set(0, Math.PI * 0.25, 0);
+                }
+            });
+
+            // Initialize visibility based on checkbox states
+            externalFrame.visible = toggleExternal.checked;
+            shelvesGroup.visible = toggleShelves.checked;
+            railsGroup.visible = toggleRails.checked;
+            dividersGroup.visible = toggleDividers.checked;
+            glassFront.visible = toggleGlass.checked;
+            motorsGroup.visible = toggleMotors.checked;
+            clampsGroup.visible = toggleClamps.checked;
+            spiralsGroup.visible = toggleSpirals.checked;
+
+            animate();
+        }
+
+        function onMouseDown(e) {
+            mouseDown = true;
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        }
+
+        function onMouseMove(e) {
+            if (!mouseDown || isPartsView) return;
+
+            const deltaX = e.clientX - mouseX;
+            const deltaY = e.clientY - mouseY;
+
+            frameGroup.rotation.y += deltaX * 0.01;
+            frameGroup.rotation.x += deltaY * 0.01;
+
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        }
+
+        function onMouseUp() {
+            mouseDown = false;
+        }
+
+        function onWheel(e) {
+            e.preventDefault();
+
+            // If shift is held, zoom in/out
+            if (e.shiftKey) {
+                camera.position.z += e.deltaY * 0.05;
+                camera.position.z = Math.max(30, Math.min(150, camera.position.z));
+            } else {
+                // Otherwise, use scroll to rotate
+                // deltaX = horizontal scroll (rotates around Y axis)
+                // deltaY = vertical scroll (rotates around X axis)
+                frameGroup.rotation.y += e.deltaX * 0.005;
+                frameGroup.rotation.x += e.deltaY * 0.005;
+            }
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if (!isPartsView && !isPaused) {
+                frameGroup.rotation.y += 0.002; // Slow auto-rotation
+            }
+            renderer.render(scene, camera);
+        }
+
+        init();
+    </script>
+</body>
+</html>
