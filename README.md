@@ -1,11 +1,11 @@
-# Vending Machine Visualizer v1
+# Vending Machine Visualizer v2
 
-Initial prototype of the 3D vending machine visualizer.
+Refactored version with improved code organization.
 
-**Features:**
-- Interactive 3D model using Three.js
-- Toggle visibility of components
-- Cut list view for construction planning
-- Mouse/scroll controls
+**Improvements over v1:**
+- Centralized CONFIG object for all dimensions
+- Component factory functions for better modularity
+- Dynamic dimension and cut list generation
+- Cleaner separation of concerns
 
-**Tech:** Single-file HTML with inline JavaScript
+**Tech:** Single-file HTML with organized JavaScript
