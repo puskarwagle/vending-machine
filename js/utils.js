@@ -4,7 +4,9 @@ function getShelfY(rowIndex) {
 }
 
 function getBackZ() {
-    return -(CONFIG.frame.depth - CONFIG.shelves.depth) / 2;
+    // Center Z of the shelf, adjusted for wiring gap at the back
+    // Original flush position + gap
+    return -(CONFIG.frame.depth - CONFIG.shelves.depth) / 2 + CONFIG.wiring.gap;
 }
 
 function getSlotCenter(row, col) {

@@ -128,7 +128,7 @@ canvas { display: block; }
     justify-content: center;
 }
 .panel {
-    background: #d4a574 url('plywood.jpg');
+    background: #d4a574 url('../images/plywood.jpg');
     background-size: cover;
     background-position: center;
     border: 3px solid #333;

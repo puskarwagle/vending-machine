@@ -20,7 +20,14 @@ const CONFIG = {
         slantAngle: 0.3
     },
     shelves: {
-        depth: 18  // Shallower than frame depth to create collection area
+        depth: 18,  // Shallower than frame depth to create collection area
+        backplateHeight: 4,
+        backplateThickness: 0.33
+    },
+    wiring: {
+        color: 0x3366ff,
+        thickness: 0.05,
+        gap: 2 // Space behind shelves for wiring
     },
     rails: {
         width: 1,
@@ -44,9 +51,15 @@ const CONFIG = {
         height: 2,
         thickness: 0.2
     },
+    powerbox: {
+        width: 10,
+        height: 4,
+        depth: 6,
+        color: 0x222222
+    },
     spiral: {
-        radius: 3,
-        length: 14,
+        radius: 2.5,
+        length: 12,
         turns: 8,
         tubeRadius: 0.15
     }

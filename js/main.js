@@ -1,6 +1,6 @@
 // Global state variables
 let scene, camera, renderer;
-let frameGroup, externalFrame, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup;
+let frameGroup, externalFrame, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
 let shelvesGroup, railsGroup, dividersGroup;
 let mouseDown = false, mouseX = 0, mouseY = 0;
 let isPartsView = false;
@@ -79,6 +79,13 @@ function init() {
     spiralsGroup = new THREE.Group();
     frameGroup.add(spiralsGroup);
 
+    wiringGroup = new THREE.Group();
+    frameGroup.add(wiringGroup);
+
+    // Power Box Group
+    const powerBoxGroup = new THREE.Group();
+    frameGroup.add(powerBoxGroup);
+
     // Create materials
     const materials = createMaterials();
 
@@ -93,6 +100,14 @@ function init() {
     // Create collection bin
     const binFloor = createCollectionBin(materials);
     internalFrame.add(binFloor);
+
+    // Create Power Box
+    const powerBox = createPowerBox(materials);
+    powerBoxGroup.add(powerBox);
+
+    // Create Wiring
+    const wiring = createWiring(materials);
+    wiringGroup.add(wiring);
 
     // Create shelves for each row
     for (let i = 1; i <= CONFIG.grid.rows; i++) {
@@ -144,7 +159,8 @@ function init() {
         { id: 'toggle-glass', target: () => glassFront },
         { id: 'toggle-motors', target: () => motorsGroup },
         { id: 'toggle-clamps', target: () => clampsGroup },
-        { id: 'toggle-spirals', target: () => spiralsGroup }
+        { id: 'toggle-spirals', target: () => spiralsGroup },
+        { id: 'toggle-wiring', target: () => wiringGroup }
     ];
 
     menuHeader.addEventListener('click', () => {
@@ -197,6 +213,12 @@ function init() {
             frameGroup.rotation.set(0, Math.PI * 0.25, 0);
         }
     });
+
+    // Ensure state matches checkbox on load (e.g. after refresh)
+    if (togglePause.checked) {
+        isPaused = true;
+        frameGroup.rotation.set(0, Math.PI * 0.25, 0);
+    }
 
     animate();
 }
