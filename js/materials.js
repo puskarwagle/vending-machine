@@ -3,11 +3,11 @@ function createMaterials() {
     const textureLoader = new THREE.TextureLoader();
 
     // Load textures
-    const plywoodTexture = textureLoader.load('plywood.jpg');
+    const plywoodTexture = textureLoader.load('images/plywood.jpg');
     plywoodTexture.wrapS = THREE.RepeatWrapping;
     plywoodTexture.wrapT = THREE.RepeatWrapping;
 
-    const plywoodSideTexture = textureLoader.load('plywood-side.jpg');
+    const plywoodSideTexture = textureLoader.load('images/plywood-side.jpg');
     plywoodSideTexture.wrapS = THREE.RepeatWrapping;
     plywoodSideTexture.wrapT = THREE.RepeatWrapping;
 
