@@ -1,6 +1,6 @@
 // Global state variables
 let scene, camera, renderer;
-let frameGroup, externalFrame, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
+let frameGroup, topBottomSidesGroup, backPanelGroup, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
 let shelvesGroup, railsGroup, dividersGroup;
 let mouseDown = false, mouseX = 0, mouseY = 0;
 let isPartsView = false;
@@ -51,9 +51,13 @@ function init() {
     frameGroup = new THREE.Group();
     scene.add(frameGroup);
 
-    // External frame group (outer box)
-    externalFrame = new THREE.Group();
-    frameGroup.add(externalFrame);
+    // Top Bottom Sides group
+    topBottomSidesGroup = new THREE.Group();
+    frameGroup.add(topBottomSidesGroup);
+
+    // Back Panel group
+    backPanelGroup = new THREE.Group();
+    frameGroup.add(backPanelGroup);
 
     // Internal frame group (shelves and dividers)
     internalFrame = new THREE.Group();
@@ -89,9 +93,13 @@ function init() {
     // Create materials
     const materials = createMaterials();
 
-    // Create external frame
-    const frameGeometry = createExternalFrame(materials);
-    externalFrame.add(...frameGeometry.children);
+    // Create top bottom sides
+    const topBottomSides = createTopBottomSides(materials);
+    topBottomSidesGroup.add(...topBottomSides.children);
+
+    // Create back panel
+    const backPanel = createBackPanel(materials);
+    backPanelGroup.add(...backPanel.children);
 
     // Create glass front
     glassFront = createGlassFront(materials);
@@ -149,10 +157,17 @@ function init() {
     const menu = document.getElementById('menu');
     const toggleCutlist = document.getElementById('toggle-cutlist');
     const togglePause = document.getElementById('toggle-pause');
+    const zoomSlider = document.getElementById('zoom-slider');
+    const zoomInBtn = document.getElementById('zoom-in');
+    const zoomOutBtn = document.getElementById('zoom-out');
+
+    // Initialize slider to current camera distance (inverted scale)
+    zoomSlider.value = 180 - camera.position.length();
 
     // Menu toggle configuration - maps toggle IDs to their target groups
     const menuToggles = [
-        { id: 'toggle-external', target: () => externalFrame },
+        { id: 'toggle-topbottomsides', target: () => topBottomSidesGroup },
+        { id: 'toggle-backpanel', target: () => backPanelGroup },
         { id: 'toggle-shelves', target: () => shelvesGroup },
         { id: 'toggle-rails', target: () => railsGroup },
         { id: 'toggle-dividers', target: () => dividersGroup },
@@ -165,6 +180,43 @@ function init() {
 
     menuHeader.addEventListener('click', () => {
         menu.classList.toggle('collapsed');
+    });
+
+    // Zoom controls - maintains camera angle while zooming
+    function updateZoom(zoomValue) {
+        // Invert slider value to distance: higher slider = closer camera
+        const distance = 180 - parseFloat(zoomValue);
+        // Calculate current direction vector from camera to origin
+        const direction = new THREE.Vector3(0, 0, 0).sub(camera.position).normalize();
+        // Get current distance
+        const currentDistance = camera.position.length();
+        // Calculate ratio to maintain x, y proportions
+        const ratio = distance / currentDistance;
+        // Update camera position maintaining direction
+        camera.position.set(
+            camera.position.x * ratio,
+            camera.position.y * ratio,
+            camera.position.z * ratio
+        );
+        camera.lookAt(0, 0, 0);
+    }
+
+    zoomSlider.addEventListener('input', (e) => {
+        updateZoom(e.target.value);
+    });
+
+    zoomInBtn.addEventListener('click', () => {
+        const currentSliderValue = parseFloat(zoomSlider.value);
+        const newSliderValue = Math.min(150, currentSliderValue + 5);
+        zoomSlider.value = newSliderValue;
+        updateZoom(newSliderValue);
+    });
+
+    zoomOutBtn.addEventListener('click', () => {
+        const currentSliderValue = parseFloat(zoomSlider.value);
+        const newSliderValue = Math.max(30, currentSliderValue - 5);
+        zoomSlider.value = newSliderValue;
+        updateZoom(newSliderValue);
     });
 
     toggleCutlist.addEventListener('change', (e) => {
@@ -251,8 +303,18 @@ function onWheel(e) {
 
     // If shift is held, zoom in/out
     if (e.shiftKey) {
-        camera.position.z += e.deltaY * 0.05;
-        camera.position.z = Math.max(30, Math.min(150, camera.position.z));
+        const currentDistance = camera.position.length();
+        const newDistance = Math.max(30, Math.min(150, currentDistance + e.deltaY * 0.05));
+        const ratio = newDistance / currentDistance;
+        camera.position.set(
+            camera.position.x * ratio,
+            camera.position.y * ratio,
+            camera.position.z * ratio
+        );
+        camera.lookAt(0, 0, 0);
+        // Update slider to match (invert: distance to slider value)
+        const zoomSlider = document.getElementById('zoom-slider');
+        if (zoomSlider) zoomSlider.value = 180 - newDistance;
     } else {
         // Otherwise, use scroll to rotate
         // deltaX = horizontal scroll (rotates around Y axis)

@@ -23,14 +23,24 @@
             <span id="menu-toggle">☰</span>
         </div>
         <div id="menu-content">
+            <div class="menu-item" style="display: flex; align-items: center; gap: 10px;">
+                <button id="zoom-out" class="zoom-button">-</button>
+                <input type="range" id="zoom-slider" min="30" max="150" value="70" step="1" style="flex: 1;">
+                <button id="zoom-in" class="zoom-button">+</button>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
             <div class="menu-item">
                 <input type="checkbox" id="toggle-cutlist" class="hidden-checkbox">
                 <label for="toggle-cutlist" class="button-label">Cut List View</label>
             </div>
             <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
             <div class="menu-item">
-                <input type="checkbox" id="toggle-external" class="hidden-checkbox" checked>
-                <label for="toggle-external" class="button-label">External Frame</label>
+                <input type="checkbox" id="toggle-topbottomsides" class="hidden-checkbox" checked>
+                <label for="toggle-topbottomsides" class="button-label">Top Bottom Sides</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-backpanel" class="hidden-checkbox" checked>
+                <label for="toggle-backpanel" class="button-label">Back Panel</label>
             </div>
             <div class="menu-item">
                 <input type="checkbox" id="toggle-shelves" class="hidden-checkbox" checked>

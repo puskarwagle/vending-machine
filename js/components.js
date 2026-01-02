@@ -1,5 +1,5 @@
 // Component factory functions
-function createExternalFrame(materials) {
+function createBackPanel(materials) {
     const group = new THREE.Group();
     const { width, height, depth, thickness } = CONFIG.frame;
 
@@ -10,6 +10,13 @@ function createExternalFrame(materials) {
     );
     back.position.z = -depth/2;
     group.add(back);
+
+    return group;
+}
+
+function createTopBottomSides(materials) {
+    const group = new THREE.Group();
+    const { width, height, depth, thickness } = CONFIG.frame;
 
     // Side panels
     const leftSide = new THREE.Mesh(
