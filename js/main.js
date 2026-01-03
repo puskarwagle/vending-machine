@@ -12,6 +12,9 @@ let isDirty = true; // Flag to track if scene needs re-render
 let eventListeners = []; // Store event listeners for cleanup
 let motorsCreated = false; // Flag to track if motor assemblies have been created
 let materials = null; // Store materials for lazy loading
+// Touch control variables
+let touchStartX = 0, touchStartY = 0;
+let lastTouchDistance = 0;
 
 // Helper function to mark scene as needing re-render
 function setDirty() {
@@ -233,6 +236,11 @@ function init() {
     addTrackedListener(renderer.domElement, 'mouseup', onMouseUp);
     addTrackedListener(renderer.domElement, 'wheel', onWheel);
 
+    // Touch controls
+    addTrackedListener(renderer.domElement, 'touchstart', onTouchStart);
+    addTrackedListener(renderer.domElement, 'touchmove', onTouchMove);
+    addTrackedListener(renderer.domElement, 'touchend', onTouchEnd);
+
     addTrackedListener(window, 'resize', onWindowResize);
 
     // Menu controls - dynamic setup
@@ -438,6 +446,79 @@ function onWheel(e) {
         frameGroup.rotation.x += e.deltaY * 0.005;
     }
     setDirty();
+}
+
+function onTouchStart(e) {
+    if (isPartsView) return;
+
+    if (e.touches.length === 1) {
+        // Single touch - rotation
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+        // Two touches - pinch to zoom
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+    }
+}
+
+function onTouchMove(e) {
+    e.preventDefault(); // Prevent scrolling
+    if (isPartsView) return;
+
+    if (e.touches.length === 1) {
+        // Single touch - rotate the model
+        const touchX = e.touches[0].clientX;
+        const touchY = e.touches[0].clientY;
+
+        const deltaX = touchX - touchStartX;
+        const deltaY = touchY - touchStartY;
+
+        frameGroup.rotation.y += deltaX * 0.01;
+        frameGroup.rotation.x += deltaY * 0.01;
+
+        touchStartX = touchX;
+        touchStartY = touchY;
+        setDirty();
+    } else if (e.touches.length === 2) {
+        // Two touches - pinch to zoom
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+
+        if (lastTouchDistance > 0) {
+            const delta = distance - lastTouchDistance;
+            const currentDistance = camera.position.length();
+            const newDistance = Math.max(30, Math.min(150, currentDistance - delta * 0.1));
+            const ratio = newDistance / currentDistance;
+
+            camera.position.set(
+                camera.position.x * ratio,
+                camera.position.y * ratio,
+                camera.position.z * ratio
+            );
+            camera.lookAt(0, 0, 0);
+
+            // Update slider to match
+            const zoomSlider = document.getElementById('zoom-slider');
+            if (zoomSlider) zoomSlider.value = 180 - newDistance;
+        }
+
+        lastTouchDistance = distance;
+        setDirty();
+    }
+}
+
+function onTouchEnd(e) {
+    if (e.touches.length === 0) {
+        lastTouchDistance = 0;
+    } else if (e.touches.length === 1) {
+        // Reset single touch position when one finger is lifted during pinch
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        lastTouchDistance = 0;
+    }
 }
 
 function onWindowResize() {
