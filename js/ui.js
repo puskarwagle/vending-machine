@@ -14,7 +14,6 @@ export function generateDimensionsDisplay() {
     const depthM = (depth * 0.0254).toFixed(2);
 
     return `
-        <div style="font-weight: bold; margin-bottom: 8px; font-size: 13px;">Dimensions</div>
         <div class="dimension-row">
             <span class="dimension-label">Width:</span>
             <span class="dimension-value">${width}" / ${widthCm}cm / ${widthFt}ft / ${widthM}m</span>
@@ -157,6 +156,140 @@ export function generateCutList() {
 
     html += `
         </div>
+    `;
+
+    return html;
+}
+
+// Generate menu controls HTML for DaisyUI drawer
+export function generateMenuHTML() {
+    // Define toggle groups with their components
+    const toggleGroups = [
+        {
+            id: 'structure-group',
+            title: 'Structure',
+            toggles: [
+                { id: 'toggle-topbottomsides', label: 'Top Bottom Sides', checked: true },
+                { id: 'toggle-backpanel', label: 'Back Panel', checked: true }
+            ]
+        },
+        {
+            id: 'shelving-group',
+            title: 'Shelving System',
+            toggles: [
+                { id: 'toggle-shelves', label: 'Shelves', checked: true },
+                { id: 'toggle-rails', label: 'Rails', checked: true },
+                { id: 'toggle-dividers', label: 'Dividers', checked: true }
+            ]
+        },
+        {
+            id: 'mechanisms-group',
+            title: 'Mechanisms',
+            toggles: [
+                { id: 'toggle-motors', label: 'Motors', checked: true },
+                { id: 'toggle-clamps', label: 'Clamps', checked: true },
+                { id: 'toggle-spirals', label: 'Spirals', checked: true }
+            ]
+        },
+        {
+            id: 'additional-group',
+            title: 'Additional Parts',
+            toggles: [
+                { id: 'toggle-glass', label: 'Glass Front', checked: false },
+                { id: 'toggle-wiring', label: 'Wiring', checked: true },
+                { id: 'toggle-powerbox', label: 'Power Box', checked: true },
+                { id: 'toggle-collectionbin', label: 'Collection Bin', checked: true }
+            ]
+        }
+    ];
+
+    let html = `
+        <ul class="menu w-full grow p-2 gap-1">
+            <!-- View Controls Section -->
+            <li class="menu-title text-base-content/60 text-xs font-semibold uppercase tracking-wider px-4 py-2">View Controls</li>
+
+            <!-- Zoom Control -->
+            <li class="px-2 py-2">
+                <div class="flex flex-col gap-2">
+                    <label class="text-xs text-base-content/70">Zoom</label>
+                    <div class="flex items-center gap-2">
+                        <button id="zoom-out" class="btn btn-xs btn-square btn-ghost">−</button>
+                        <input type="range" id="zoom-slider" min="30" max="150" value="70" class="range range-xs flex-1" />
+                        <button id="zoom-in" class="btn btn-xs btn-square btn-ghost">+</button>
+                    </div>
+                </div>
+            </li>
+
+            <!-- Pause Toggle -->
+            <li class="px-2">
+                <label class="label cursor-pointer justify-start gap-3 py-2">
+                    <input type="checkbox" id="toggle-pause" class="toggle toggle-sm" />
+                    <span class="label-text text-sm">Pause & Front View</span>
+                </label>
+            </li>
+
+            <li><div class="divider my-1"></div></li>
+
+            <!-- Actions Section -->
+            <li class="menu-title text-base-content/60 text-xs font-semibold uppercase tracking-wider px-4 py-2">Actions</li>
+            <li class="px-2 py-1">
+                <div class="flex flex-wrap gap-2">
+                    <button id="assemble-button" class="flex-1 basis-[calc(50%-0.25rem)] btn btn-sm btn-neutral h-10" data-active="false">Assemble</button>
+                    <button id="show-components-button" class="flex-1 basis-[calc(50%-0.25rem)] btn btn-sm btn-neutral h-10" data-active="false">Show Components</button>
+                </div>
+            </li>
+
+            <li><div class="divider my-1"></div></li>
+
+            <!-- Component Visibility Section -->
+            <li class="menu-title text-base-content/60 text-xs font-semibold uppercase tracking-wider px-4 py-2">Components</li>
+    `;
+
+    // Generate groups
+    toggleGroups.forEach(group => {
+        html += `
+            <li>
+                <details open class="collapse collapse-arrow bg-base-200 rounded-lg p-0" style="pointer-events: none;">
+                    <summary class="collapse-title min-h-0 py-2 px-3 text-sm font-medium" style="opacity: 0; height: 0; min-height: 0; padding: 0; margin: 0; position: absolute;">hidden</summary>
+                    <div class="py-2 px-3 text-sm font-medium">${group.title}</div>
+                    <div class="collapse-content px-2 pb-2" style="pointer-events: auto;">
+                        <div class="flex flex-wrap gap-2">
+        `;
+
+        group.toggles.forEach(toggle => {
+            html += `
+                            <button
+                                id="${toggle.id}"
+                                class="component-toggle-btn flex-1 basis-[calc(50%-0.25rem)] btn btn-sm ${toggle.checked ? 'btn-primary' : 'btn-outline'}"
+                                data-active="${toggle.checked}"
+                            >
+                                ${toggle.label}
+                            </button>
+            `;
+        });
+
+        html += `
+                        </div>
+                    </div>
+                </details>
+            </li>
+        `;
+    });
+
+    // Dimensions section
+    const dimensionsContent = generateDimensionsDisplay();
+    html += `
+            <li><div class="divider my-1"></div></li>
+
+            <li class="bg-base-200 rounded-lg p-0 w-full">
+                <div class="py-2 px-3 text-sm font-medium">Dimensions</div>
+                <div class="px-3 pb-2 w-full">
+                    <div class="text-xs space-y-1">
+                        ${dimensionsContent}
+                    </div>
+                </div>
+            </li>
+        </ul>
     `;
 
     return html;

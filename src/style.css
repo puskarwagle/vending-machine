@@ -1,8 +1,25 @@
 @import "tailwindcss";
 @plugin "daisyui";
 
-body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
-canvas { display: block; }
+body {
+    margin: 0;
+    overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* Canvas container fills the drawer content area */
+#canvas-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
 
 /* Loading Overlays */
 #main-loading-overlay {
@@ -26,10 +43,10 @@ canvas { display: block; }
 }
 
 #parts-loading-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
-    left: 310px;
-    width: calc(100% - 310px);
+    left: 0;
+    width: 100%;
     height: 100%;
     background: #000;
     display: none;
@@ -75,17 +92,8 @@ canvas { display: block; }
     font-size: 18px;
     font-weight: normal;
 }
-#info {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    color: white;
-    background: rgba(0,0,0,0.7);
-    padding: 15px;
-    border-radius: 5px;
-    font-size: 14px;
-    line-height: 1.6;
-}
+
+/* Controls Info */
 #controls {
     position: absolute;
     bottom: 10px;
@@ -95,158 +103,57 @@ canvas { display: block; }
     padding: 10px;
     border-radius: 5px;
     font-size: 12px;
+    z-index: 10;
 }
-#menu {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    min-width: 280px;
-    background: rgba(0,0,0,0.8);
-    border-radius: 5px;
-    overflow: hidden;
-    transition: width 0.3s;
-}
-#menu.collapsed {
-    width: 40px;
-}
-#menu-header {
-    padding: 10px;
-    background: rgba(50,50,50,0.9);
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: white;
-    font-weight: bold;
-}
-#menu-toggle {
-    font-size: 18px;
-    user-select: none;
-}
-#menu-content {
-    padding: 10px;
-    color: white;
-}
-#menu.collapsed #menu-content {
-    display: none;
-}
-#menu.collapsed #menu-header span:first-child {
-    display: none;
-}
-.menu-item {
-    margin: 5px 0;
-    position: relative;
-}
-.hidden-checkbox {
-    display: none;
-}
-.button-label {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    background: rgba(70,70,70,0.5);
-    border: 2px solid rgba(255,255,255,0.2);
-    border-radius: 4px;
-    cursor: pointer;
-    text-align: center;
-    transition: all 0.2s ease;
-    user-select: none;
-    box-sizing: border-box;
-}
-.button-label:hover {
-    background: rgba(90,90,90,0.7);
-    border-color: rgba(255,255,255,0.4);
-}
-.hidden-checkbox:checked + .button-label {
-    background: rgba(100,200,100,0.4);
-    border-color: rgba(100,255,100,0.6);
-}
-.zoom-button {
-    width: 35px;
-    height: 35px;
-    background: rgba(70,70,70,0.5);
-    border: 2px solid rgba(255,255,255,0.2);
-    border-radius: 4px;
-    color: white;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-.zoom-button:hover {
-    background: rgba(90,90,90,0.7);
-    border-color: rgba(255,255,255,0.4);
-}
-.zoom-button:active {
-    background: rgba(50,50,50,0.8);
-}
-#zoom-slider {
-    -webkit-appearance: none;
-    appearance: none;
-    height: 6px;
-    background: rgba(255,255,255,0.2);
-    border-radius: 3px;
-    outline: none;
-}
-#zoom-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 18px;
-    height: 18px;
-    background: rgba(100,200,100,0.8);
-    border: 2px solid rgba(255,255,255,0.5);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-#zoom-slider::-webkit-slider-thumb:hover {
-    background: rgba(100,255,100,0.9);
-    transform: scale(1.1);
-}
-#zoom-slider::-moz-range-thumb {
-    width: 18px;
-    height: 18px;
-    background: rgba(100,200,100,0.8);
-    border: 2px solid rgba(255,255,255,0.5);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-#zoom-slider::-moz-range-thumb:hover {
-    background: rgba(100,255,100,0.9);
-    transform: scale(1.1);
-}
-.dimension-row {
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
-    font-size: 12px;
-}
-.dimension-row:last-child {
-    border-bottom: none;
-}
-.dimension-label {
-    font-weight: bold;
-    color: #aaa;
-    display: inline-block;
-    width: 60px;
-}
-.dimension-value {
-    color: #fff;
-}
+
+/* Parts Overlay - adjusted for drawer */
 #parts-overlay {
-    position: absolute;
+    position: fixed;
     top: 0;
-    left: 310px;
-    width: calc(100% - 310px);
+    left: 0;
+    width: 100%;
     height: 100%;
     display: none;
     overflow-y: auto;
     overflow-x: hidden;
     background: #000;
     scroll-snap-type: y mandatory;
+    z-index: 10;
 }
+
 #parts-overlay.active {
     display: block;
+}
+
+/* Adjust parts overlay for drawer on desktop */
+@media (min-width: 1024px) {
+    #parts-overlay {
+        left: 320px;
+        width: calc(100% - 320px);
+    }
+}
+
+/* Dimension display styles */
+.dimension-row {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 14px;
+}
+
+.dimension-row:last-child {
+    border-bottom: none;
+}
+
+.dimension-label {
+    font-weight: bold;
+    color: #aaa;
+    display: inline-block;
+    width: 50px;
+}
+
+.dimension-value {
+    color: #fff;
+    font-size: 12px;
 }
 
 /* Component list - vertical layout only */

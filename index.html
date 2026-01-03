@@ -1,8 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <title>Vending Machine Frame</title>
 </head>
 <body>
@@ -22,90 +23,61 @@
         </div>
     </div>
 
-    <div id="controls">
-        Scroll to rotate | Shift+Scroll to zoom | Drag to rotate | Touch to rotate | Pinch to zoom
-    </div>
-    <div id="menu">
-        <div id="menu-header">
-            <span>Menu</span>
-            <span id="menu-toggle">☰</span>
+    <!-- DaisyUI Drawer Structure -->
+    <div class="drawer lg:drawer-open">
+        <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
+
+        <!-- Main Content Area -->
+        <div class="drawer-content flex flex-col">
+            <!-- Navbar -->
+            <nav class="navbar bg-base-300 lg:hidden">
+                <label for="drawer-toggle" aria-label="open sidebar" class="btn btn-square btn-ghost">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor" class="inline-block size-5">
+                        <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
+                        <path d="M9 4v16"></path>
+                        <path d="M14 10l2 2l-2 2"></path>
+                    </svg>
+                </label>
+                <div class="px-4 text-sm font-semibold">Vending Machine</div>
+            </nav>
+
+            <!-- 3D Canvas Container -->
+            <div id="canvas-container" class="flex-1">
+                <!-- Canvas will be appended here by Three.js -->
+            </div>
+
+            <!-- Controls Info (bottom right) -->
+            <div id="controls">
+                Scroll to rotate | Shift+Scroll to zoom | Drag to rotate | Touch to rotate | Pinch to zoom
+            </div>
         </div>
-        <div id="menu-content">
-            <div class="menu-item" style="display: flex; align-items: center; gap: 10px;">
-                <button id="zoom-out" class="zoom-button">-</button>
-                <input type="range" id="zoom-slider" min="30" max="150" value="70" step="1" style="flex: 1;">
-                <button id="zoom-in" class="zoom-button">+</button>
-            </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
-            <div class="menu-item">
-                <button id="assemble-button" class="button-label" style="width: 100%; cursor: pointer; color: white;">Assemble</button>
-            </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-cutlist" class="hidden-checkbox">
-                <label for="toggle-cutlist" class="button-label">Components</label>
-            </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-topbottomsides" class="hidden-checkbox" checked>
-                <label for="toggle-topbottomsides" class="button-label">Top Bottom Sides</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-backpanel" class="hidden-checkbox" checked>
-                <label for="toggle-backpanel" class="button-label">Back Panel</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-shelves" class="hidden-checkbox" checked>
-                <label for="toggle-shelves" class="button-label">Shelves</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-rails" class="hidden-checkbox" checked>
-                <label for="toggle-rails" class="button-label">Rails</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-dividers" class="hidden-checkbox" checked>
-                <label for="toggle-dividers" class="button-label">Dividers</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-glass" class="hidden-checkbox">
-                <label for="toggle-glass" class="button-label">Glass Front</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-motors" class="hidden-checkbox" checked>
-                <label for="toggle-motors" class="button-label">Motors</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-clamps" class="hidden-checkbox" checked>
-                <label for="toggle-clamps" class="button-label">Clamps</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-spirals" class="hidden-checkbox" checked>
-                <label for="toggle-spirals" class="button-label">Spirals</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-wiring" class="hidden-checkbox" checked>
-                <label for="toggle-wiring" class="button-label">Wiring</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-powerbox" class="hidden-checkbox" checked>
-                <label for="toggle-powerbox" class="button-label">Power Box</label>
-            </div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-collectionbin" class="hidden-checkbox" checked>
-                <label for="toggle-collectionbin" class="button-label">Collection Bin</label>
-            </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
-            <div class="menu-item">
-                <input type="checkbox" id="toggle-pause" class="hidden-checkbox">
-                <label for="toggle-pause" class="button-label">Pause & Front View</label>
-            </div>
-            <div id="dimensions-display" style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">
+
+        <!-- Drawer Sidebar -->
+        <div class="drawer-side">
+            <label for="drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
+            <div class="flex min-h-full flex-col bg-base-200 w-80">
+                <!-- Sidebar Header (visible on desktop) -->
+                <div class="hidden lg:flex items-center gap-2 px-4 py-3 bg-base-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-linejoin="round" stroke-linecap="round" stroke-width="2" fill="none" stroke="currentColor" class="inline-block size-5">
+                        <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
+                        <path d="M9 4v16"></path>
+                    </svg>
+                    <span class="text-sm font-semibold">Vending Machine</span>
+                </div>
+
+                <!-- Menu will be populated by JavaScript -->
+                <div id="sidebar-menu" class="overflow-y-auto">
+                    <!-- Dynamic menu content -->
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Parts Overlay (for component list view) -->
     <div id="parts-overlay">
         <!-- Cut list will be generated dynamically by JavaScript -->
     </div>
+
     <script type="module" src="/src/main.js"></script>
 </body>
 </html>

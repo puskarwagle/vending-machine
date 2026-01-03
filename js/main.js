@@ -13,7 +13,7 @@ import {
     createPowerBox,
     createWiring
 } from './components.js';
-import { generateDimensionsDisplay, generateCutList } from './ui.js';
+import { generateMenuHTML, generateCutList } from './ui.js';
 import { initializeCutListViewers, cleanupCutListViewers } from './cutlist-viewers.js';
 
 // Module state variables
@@ -121,6 +121,9 @@ function stopAssembly() {
     if (assembleButton) {
         assembleButton.disabled = false;
         assembleButton.textContent = 'Assemble';
+        assembleButton.dataset.active = 'false';
+        assembleButton.classList.remove('btn-success');
+        assembleButton.classList.add('btn-neutral');
     }
     isAssembling = false;
 }
@@ -141,10 +144,12 @@ function assembleAnimation(menuToggles) {
     assembleButton.disabled = true;
     assembleButton.textContent = 'Assembling...';
 
-    // First, uncheck all and hide all components
+    // First, deactivate all and hide all components
     menuToggles.forEach(toggle => {
         const element = document.getElementById(toggle.id);
-        element.checked = false;
+        element.dataset.active = 'false';
+        element.classList.remove('btn-primary');
+        element.classList.add('btn-outline');
         toggle.target().visible = false;
     });
     setDirty();
@@ -174,7 +179,9 @@ function assembleAnimation(menuToggles) {
             const toggle = menuToggles.find(t => t.id === toggleId);
             if (toggle) {
                 const element = document.getElementById(toggleId);
-                element.checked = true;
+                element.dataset.active = 'true';
+                element.classList.remove('btn-outline');
+                element.classList.add('btn-primary');
                 toggle.target().visible = true;
                 setDirty();
             }
@@ -184,6 +191,9 @@ function assembleAnimation(menuToggles) {
                 const finalTimeoutId = setTimeout(() => {
                     assembleButton.disabled = false;
                     assembleButton.textContent = 'Assemble';
+                    assembleButton.dataset.active = 'false';
+                    assembleButton.classList.remove('btn-success');
+                    assembleButton.classList.add('btn-neutral');
                     isAssembling = false;
                     assemblyTimeouts = [];
                 }, 500);
@@ -199,13 +209,13 @@ function init() {
     // Initialize loading overlays
     initLoadingOverlays();
 
+    // Generate and populate sidebar menu
+    const sidebarMenu = document.getElementById('sidebar-menu');
+    sidebarMenu.innerHTML = generateMenuHTML();
+
     // Generate and populate cut list
     const partsOverlay = document.getElementById('parts-overlay');
     partsOverlay.innerHTML = generateCutList();
-
-    // Generate and populate dimensions display
-    const dimensionsDisplay = document.getElementById('dimensions-display');
-    dimensionsDisplay.innerHTML = generateDimensionsDisplay();
 
     // Scene
     scene = new THREE.Scene();
@@ -219,7 +229,8 @@ function init() {
     // Renderer
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    const canvasContainer = document.getElementById('canvas-container');
+    canvasContainer.appendChild(renderer.domElement);
 
     // Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -335,9 +346,7 @@ function init() {
     addTrackedListener(window, 'resize', onWindowResize);
 
     // Menu controls - dynamic setup
-    const menuHeader = document.getElementById('menu-header');
-    const menu = document.getElementById('menu');
-    const toggleCutlist = document.getElementById('toggle-cutlist');
+    const showComponentsButton = document.getElementById('show-components-button');
     const togglePause = document.getElementById('toggle-pause');
     const zoomSlider = document.getElementById('zoom-slider');
     const zoomInBtn = document.getElementById('zoom-in');
@@ -362,10 +371,6 @@ function init() {
         { id: 'toggle-powerbox', target: () => powerBoxGroup },
         { id: 'toggle-collectionbin', target: () => collectionBinGroup }
     ];
-
-    addTrackedListener(menuHeader, 'click', () => {
-        menu.classList.toggle('collapsed');
-    });
 
     // Zoom controls - maintains camera angle while zooming
     function updateZoom(zoomValue) {
@@ -405,8 +410,39 @@ function init() {
         updateZoom(newSliderValue);
     });
 
-    addTrackedListener(toggleCutlist, 'change', (e) => {
-        if (e.target.checked) {
+    // Helper function to switch back to 3D view
+    function switchTo3DView() {
+        if (!isPartsView) return;
+
+        // Return to 3D view
+        isPartsView = false;
+        renderer.domElement.style.display = 'block';
+        partsOverlay.classList.remove('active');
+        document.body.style.background = '';
+
+        // Clean up cut list viewers
+        cleanupCutListViewers();
+        areCutListViewersReady = false;
+
+        // Re-enable and activate frame toggles
+        menuToggles.forEach(toggle => {
+            const element = document.getElementById(toggle.id);
+            element.dataset.active = 'true';
+            element.classList.remove('btn-outline');
+            element.classList.add('btn-primary');
+            toggle.target().visible = true;
+        });
+        setDirty();
+
+        // Update button states
+        showComponentsButton.textContent = 'Show Components';
+        showComponentsButton.dataset.active = 'false';
+        showComponentsButton.classList.remove('btn-success');
+        showComponentsButton.classList.add('btn-neutral');
+    }
+
+    addTrackedListener(showComponentsButton, 'click', () => {
+        if (!isPartsView) {
             // Stop any ongoing assembly animation
             stopAssembly();
 
@@ -416,10 +452,12 @@ function init() {
             partsOverlay.classList.add('active');
             document.body.style.background = '#000';
 
-            // Uncheck and hide frame toggles
+            // Deactivate and hide frame toggles
             menuToggles.forEach(toggle => {
                 const element = document.getElementById(toggle.id);
-                element.checked = false;
+                element.dataset.active = 'false';
+                element.classList.remove('btn-primary');
+                element.classList.add('btn-outline');
                 toggle.target().visible = false;
             });
 
@@ -435,47 +473,85 @@ function init() {
                     hidePartsLoading();
                 });
             });
+
+            // Update button states
+            showComponentsButton.textContent = 'Back to 3D View';
+            showComponentsButton.dataset.active = 'true';
+            showComponentsButton.classList.remove('btn-neutral');
+            showComponentsButton.classList.add('btn-success');
+
+            // Deactivate assemble button
+            assembleButton.dataset.active = 'false';
+            assembleButton.classList.remove('btn-success');
+            assembleButton.classList.add('btn-neutral');
         } else {
-            // Return to 3D view
-            isPartsView = false;
-            renderer.domElement.style.display = 'block';
-            partsOverlay.classList.remove('active');
-            document.body.style.background = '';
-
-            // Clean up cut list viewers
-            cleanupCutListViewers();
-            areCutListViewersReady = false;
-
-            // Re-enable and check frame toggles
-            menuToggles.forEach(toggle => {
-                const element = document.getElementById(toggle.id);
-                element.checked = true;
-                toggle.target().visible = true;
-            });
-            setDirty();
+            switchTo3DView();
         }
     });
+
+    // Mapping between toggle buttons and component viewers
+    const toggleToComponentMap = {
+        'toggle-topbottomsides': 'viewer-top-bottom',
+        'toggle-backpanel': 'viewer-back',
+        'toggle-shelves': 'viewer-shelf',
+        'toggle-rails': 'viewer-rails',
+        'toggle-dividers': 'viewer-shelf',
+        'toggle-glass': 'viewer-glass',
+        'toggle-motors': 'viewer-motor',
+        'toggle-clamps': 'viewer-motor',
+        'toggle-spirals': 'viewer-motor',
+        'toggle-wiring': 'viewer-wiring',
+        'toggle-powerbox': 'viewer-powerbox',
+        'toggle-collectionbin': 'viewer-bin'
+    };
 
     // Setup visibility toggles dynamically
     menuToggles.forEach(toggle => {
         const element = document.getElementById(toggle.id);
-        addTrackedListener(element, 'change', (e) => {
+        addTrackedListener(element, 'click', (e) => {
+            // If in parts view, scroll to the corresponding component
+            if (isPartsView) {
+                const componentId = toggleToComponentMap[toggle.id];
+                if (componentId) {
+                    const componentElement = document.getElementById(componentId);
+                    if (componentElement) {
+                        componentElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+                return; // Don't toggle visibility in parts view
+            }
+
+            // Toggle button state
+            const isActive = element.dataset.active === 'true';
+            const newActive = !isActive;
+            element.dataset.active = newActive;
+
+            // Update button styling
+            if (newActive) {
+                element.classList.remove('btn-outline');
+                element.classList.add('btn-primary');
+            } else {
+                element.classList.remove('btn-primary');
+                element.classList.add('btn-outline');
+            }
+
             // Lazy load motors if needed
             const motorRelatedIds = ['toggle-motors', 'toggle-clamps', 'toggle-spirals'];
-            if (motorRelatedIds.includes(toggle.id) && e.target.checked) {
+            if (motorRelatedIds.includes(toggle.id) && newActive) {
                 ensureMotorsCreated();
             }
 
-            toggle.target().visible = e.target.checked;
+            toggle.target().visible = newActive;
             setDirty();
         });
-        // Initialize visibility based on checkbox state
-        // For motor-related components, create them first if they're checked on load
+        // Initialize visibility based on button state
+        // For motor-related components, create them first if they're active on load
         const motorRelatedIds = ['toggle-motors', 'toggle-clamps', 'toggle-spirals'];
-        if (motorRelatedIds.includes(toggle.id) && element.checked) {
+        const isActive = element.dataset.active === 'true';
+        if (motorRelatedIds.includes(toggle.id) && isActive) {
             ensureMotorsCreated();
         }
-        toggle.target().visible = element.checked;
+        toggle.target().visible = isActive;
     });
 
     addTrackedListener(togglePause, 'change', (e) => {
@@ -494,6 +570,21 @@ function init() {
 
     // Assemble button
     addTrackedListener(assembleButton, 'click', () => {
+        // If in parts view, switch back to 3D view first
+        if (isPartsView) {
+            switchTo3DView();
+        }
+
+        // Update button states
+        assembleButton.dataset.active = 'true';
+        assembleButton.classList.remove('btn-neutral');
+        assembleButton.classList.add('btn-success');
+
+        showComponentsButton.dataset.active = 'false';
+        showComponentsButton.classList.remove('btn-success');
+        showComponentsButton.classList.add('btn-neutral');
+
+        // Start assembly animation
         assembleAnimation(menuToggles);
     });
 
