@@ -7,13 +7,6 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="info">
-        <strong>Vending Machine Internal Frame</strong><br>
-        Dimensions: 24"W × 60"H × 24"D<br>
-        Grid: 3 across × 5 down = 15 slots<br>
-        Slot size: 8"W × 10"H × 18"D<br>
-        Collection area: 10"H (bottom)
-    </div>
     <div id="controls">
         Scroll to rotate | Shift+Scroll to zoom | Drag to rotate
     </div>
@@ -30,8 +23,12 @@
             </div>
             <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
             <div class="menu-item">
+                <button id="assemble-button" class="button-label" style="width: 100%; cursor: pointer; color: white;">Assemble</button>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
+            <div class="menu-item">
                 <input type="checkbox" id="toggle-cutlist" class="hidden-checkbox">
-                <label for="toggle-cutlist" class="button-label">Cut List View</label>
+                <label for="toggle-cutlist" class="button-label">Components</label>
             </div>
             <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
             <div class="menu-item">
@@ -74,13 +71,20 @@
                 <input type="checkbox" id="toggle-wiring" class="hidden-checkbox" checked>
                 <label for="toggle-wiring" class="button-label">Wiring</label>
             </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-powerbox" class="hidden-checkbox" checked>
+                <label for="toggle-powerbox" class="button-label">Power Box</label>
+            </div>
+            <div class="menu-item">
+                <input type="checkbox" id="toggle-collectionbin" class="hidden-checkbox" checked>
+                <label for="toggle-collectionbin" class="button-label">Collection Bin</label>
+            </div>
             <div style="border-top: 1px solid rgba(255,255,255,0.2); margin: 10px 0;"></div>
             <div class="menu-item">
                 <input type="checkbox" id="toggle-pause" class="hidden-checkbox">
                 <label for="toggle-pause" class="button-label">Pause & Front View</label>
             </div>
             <div id="dimensions-display" style="padding: 10px 0; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">
-                <!-- Dimensions will be generated dynamically by JavaScript -->
             </div>
         </div>
     </div>
@@ -93,6 +97,7 @@
     <script src="js/utils.js"></script>
     <script src="js/components.js"></script>
     <script src="js/ui.js"></script>
+    <script src="js/cutlist-viewers.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>

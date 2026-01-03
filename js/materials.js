@@ -11,6 +11,10 @@ function createMaterials() {
     plywoodSideTexture.wrapS = THREE.RepeatWrapping;
     plywoodSideTexture.wrapT = THREE.RepeatWrapping;
 
+    const plywoodPanelTexture = textureLoader.load('images/plywood-3.jpg');
+    plywoodPanelTexture.wrapS = THREE.RepeatWrapping;
+    plywoodPanelTexture.wrapT = THREE.RepeatWrapping;
+
     return {
         plywood: new THREE.MeshPhongMaterial({
             map: plywoodTexture,
@@ -18,6 +22,10 @@ function createMaterials() {
         }),
         plywoodSide: new THREE.MeshPhongMaterial({
             map: plywoodSideTexture,
+            side: THREE.DoubleSide
+        }),
+        plywoodPanel: new THREE.MeshPhongMaterial({
+            map: plywoodPanelTexture,
             side: THREE.DoubleSide
         }),
         edge: new THREE.MeshPhongMaterial({

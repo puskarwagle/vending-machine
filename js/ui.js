@@ -30,52 +30,132 @@ function generateDimensionsDisplay() {
 
 // Generate cut list dynamically from CONFIG
 function generateCutList() {
-    const { width, height, depth } = CONFIG.frame;
-    const widthFt = (width / 12).toFixed(0);
-    const heightFt = (height / 12).toFixed(0);
-    const depthFt = (depth / 12).toFixed(0);
+    const { width, height, depth, thickness } = CONFIG.frame;
+    const shelfWidth = width;
+    const shelfDepth = CONFIG.shelves.depth;
+    const backplateHeight = CONFIG.shelves.backplateHeight;
 
-    return `
-        <div class="parts-layout">
-            <div class="parts-row">
-                <div class="panel panel-2x2">
-                    <div class="panel-label">Top</div>
-                    <div class="dim-label dim-width">${widthFt}ft</div>
-                    <div class="dim-label dim-height">${depthFt}ft</div>
+    // Component data
+    const components = [
+        {
+            id: 'top-bottom',
+            title: 'Top & Bottom Panels',
+            qty: 2,
+            dimensions: `${width}" × ${depth}" × ${thickness}"`,
+            material: 'Plywood',
+            description: 'Frame top and bottom'
+        },
+        {
+            id: 'sides',
+            title: 'Side Panels',
+            qty: 2,
+            dimensions: `${thickness}" × ${height}" × ${depth}"`,
+            material: 'Plywood',
+            description: 'Frame left and right sides'
+        },
+        {
+            id: 'back',
+            title: 'Back Panel',
+            qty: 1,
+            dimensions: `${width}" × ${height}" × ${thickness}"`,
+            material: 'Plywood',
+            description: 'Frame back wall'
+        },
+        {
+            id: 'shelf',
+            title: 'Shelf Assembly',
+            qty: CONFIG.grid.rows,
+            dimensions: `${shelfWidth}" × ${shelfDepth}" shelf + ${shelfWidth}" × ${backplateHeight}" backplate + ${CONFIG.grid.cols - 1} dividers`,
+            material: 'Plywood',
+            description: `Horizontal shelf with vertical backplate and ${CONFIG.grid.cols - 1} dividers per shelf`
+        },
+        {
+            id: 'rails',
+            title: 'Rail Pairs',
+            qty: CONFIG.grid.rows,
+            dimensions: `${CONFIG.rails.width}" × ${CONFIG.rails.height}" × ${shelfDepth}"`,
+            material: 'Metal',
+            description: 'Left and right rails per shelf'
+        },
+        {
+            id: 'glass',
+            title: 'Glass Front',
+            qty: 1,
+            dimensions: `${width}" × ${CONFIG.grid.rows * CONFIG.slot.height}" × ${CONFIG.glass.thickness}"`,
+            material: 'Acrylic/Glass',
+            description: 'Transparent front panel'
+        },
+        {
+            id: 'motor',
+            title: 'Motor Assembly',
+            qty: CONFIG.grid.rows * CONFIG.grid.cols,
+            dimensions: `Motor: ${CONFIG.motor.radius * 2}" dia × ${CONFIG.motor.length}"L, Spiral: ${CONFIG.spiral.length}"L`,
+            material: 'Motor + Bracket + Steel Coil',
+            description: 'Complete dispensing mechanism'
+        },
+        {
+            id: 'bin',
+            title: 'Collection Bin',
+            qty: 1,
+            dimensions: `${width}" × ${thickness}" × ${depth - 6}"`,
+            material: 'Plywood',
+            description: 'Slanted floor for item collection'
+        },
+        {
+            id: 'powerbox',
+            title: 'Power Box',
+            qty: 1,
+            dimensions: `${CONFIG.powerbox.width}" × ${CONFIG.powerbox.height}" × ${CONFIG.powerbox.depth}"`,
+            material: 'Metal Enclosure',
+            description: 'Electrical control box'
+        },
+        {
+            id: 'wiring',
+            title: 'Wiring System',
+            qty: 1,
+            dimensions: 'Main trunk + distribution to all motors',
+            material: 'Electrical wire',
+            description: 'Complete power distribution'
+        }
+    ];
+
+    // Generate HTML for component list
+    let html = `
+        <div class="component-list" id="component-list">
+    `;
+
+    components.forEach((comp, index) => {
+        const layoutClass = index % 2 === 0 ? 'layout-left' : 'layout-right';
+        html += `
+            <div class="component-item ${layoutClass}">
+                <div class="component-viewer" id="viewer-${comp.id}">
+                    <canvas id="canvas-${comp.id}"></canvas>
                 </div>
-                <div class="panel panel-2x2">
-                    <div class="panel-label">Bottom</div>
-                    <div class="dim-label dim-width">${widthFt}ft</div>
-                    <div class="dim-label dim-height">${depthFt}ft</div>
+                <div class="component-card">
+                    <h3 class="component-title">${comp.title}</h3>
+                    <div class="component-specs">
+                        <div class="spec-row">
+                            <span class="spec-label">Quantity:</span>
+                            <span class="spec-value">${comp.qty}</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Dimensions:</span>
+                            <span class="spec-value">${comp.dimensions}</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Material:</span>
+                            <span class="spec-value">${comp.material}</span>
+                        </div>
+                        <div class="component-description">${comp.description}</div>
+                    </div>
                 </div>
             </div>
-            <div class="parts-row">
-                <div class="panel panel-2x5">
-                    <div class="panel-label">Back</div>
-                    <div class="dim-label dim-width">${widthFt}ft</div>
-                    <div class="dim-label dim-height">${heightFt}ft</div>
-                </div>
-                <div class="panel panel-2x5">
-                    <div class="panel-label">Side</div>
-                    <div class="dim-label dim-width">${depthFt}ft</div>
-                    <div class="dim-label dim-height">${heightFt}ft</div>
-                </div>
-                <div class="panel panel-2x5">
-                    <div class="panel-label">Side</div>
-                    <div class="dim-label dim-width">${depthFt}ft</div>
-                    <div class="dim-label dim-height">${heightFt}ft</div>
-                </div>
-            </div>
-            <div class="parts-row">
-                <div class="panel-label" style="margin: 20px 0; font-weight: bold;">
-                    Shelves: ${CONFIG.grid.rows} @ ${widthFt}ft × ${(CONFIG.shelves.depth / 12).toFixed(1)}ft
-                </div>
-            </div>
-            <div class="parts-row">
-                <div class="panel-label" style="margin: 20px 0; font-weight: bold;">
-                    Dividers: ${CONFIG.grid.rows * (CONFIG.grid.cols - 1)} @ ${(CONFIG.dividers.height / 12).toFixed(1)}ft × ${(CONFIG.shelves.depth / 12).toFixed(1)}ft
-                </div>
-            </div>
+        `;
+    });
+
+    html += `
         </div>
     `;
+
+    return html;
 }

@@ -1,11 +1,69 @@
 // Global state variables
 let scene, camera, renderer;
 let frameGroup, topBottomSidesGroup, backPanelGroup, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
-let shelvesGroup, railsGroup, dividersGroup;
+let shelvesGroup, railsGroup, dividersGroup, powerBoxGroup, collectionBinGroup;
 let mouseDown = false, mouseX = 0, mouseY = 0;
 let isPartsView = false;
 let isPaused = false;
 let defaultCameraPos = { x: 50, y: 40, z: 70 };
+let isAssembling = false;
+
+// Assembly animation function - shows components one by one from inner to outer
+function assembleAnimation(menuToggles) {
+    if (isAssembling) return; // Prevent multiple simultaneous animations
+    isAssembling = true;
+
+    const assembleButton = document.getElementById('assemble-button');
+    assembleButton.disabled = true;
+    assembleButton.textContent = 'Assembling...';
+
+    // First, uncheck all and hide all components
+    menuToggles.forEach(toggle => {
+        const element = document.getElementById(toggle.id);
+        element.checked = false;
+        toggle.target().visible = false;
+    });
+
+    // Assembly order (inner to outer)
+    const assemblyOrder = [
+        'toggle-powerbox',      // 1. Power Box (innermost)
+        'toggle-collectionbin', // 2. Collection Bin
+        'toggle-backpanel',     // 3. Back Panel
+        'toggle-topbottomsides',// 4. Top Bottom Sides
+        'toggle-shelves',       // 5. Shelves
+        'toggle-rails',         // 6. Rails
+        'toggle-dividers',      // 7. Dividers
+        'toggle-wiring',        // 8. Wiring
+        'toggle-motors',        // 9. Motors
+        'toggle-clamps',        // 10. Clamps
+        'toggle-spirals',       // 11. Spirals
+        'toggle-glass'          // 12. Glass Front (outermost)
+    ];
+
+    // Delay between each component (2 seconds)
+    const delay = 2000;
+
+    // Show components sequentially
+    assemblyOrder.forEach((toggleId, index) => {
+        setTimeout(() => {
+            const toggle = menuToggles.find(t => t.id === toggleId);
+            if (toggle) {
+                const element = document.getElementById(toggleId);
+                element.checked = true;
+                toggle.target().visible = true;
+            }
+
+            // Re-enable button after last component
+            if (index === assemblyOrder.length - 1) {
+                setTimeout(() => {
+                    assembleButton.disabled = false;
+                    assembleButton.textContent = 'Assemble';
+                    isAssembling = false;
+                }, 500);
+            }
+        }, index * delay);
+    });
+}
 
 function init() {
     // Generate and populate cut list
@@ -15,16 +73,6 @@ function init() {
     // Generate and populate dimensions display
     const dimensionsDisplay = document.getElementById('dimensions-display');
     dimensionsDisplay.innerHTML = generateDimensionsDisplay();
-
-    // Update info display with CONFIG values
-    const info = document.getElementById('info');
-    info.innerHTML = `
-        <strong>Vending Machine Internal Frame</strong><br>
-        Dimensions: ${CONFIG.frame.width}"W × ${CONFIG.frame.height}"H × ${CONFIG.frame.depth}"D<br>
-        Grid: ${CONFIG.grid.cols} across × ${CONFIG.grid.rows} down = ${CONFIG.grid.cols * CONFIG.grid.rows} slots<br>
-        Slot size: ${CONFIG.slot.width}"W × ${CONFIG.slot.height}"H × ${CONFIG.slot.depth}"D<br>
-        Collection area: ${CONFIG.collection.height}"H (bottom)
-    `;
 
     // Scene
     scene = new THREE.Scene();
@@ -87,8 +135,12 @@ function init() {
     frameGroup.add(wiringGroup);
 
     // Power Box Group
-    const powerBoxGroup = new THREE.Group();
+    powerBoxGroup = new THREE.Group();
     frameGroup.add(powerBoxGroup);
+
+    // Collection Bin Group
+    collectionBinGroup = new THREE.Group();
+    frameGroup.add(collectionBinGroup);
 
     // Create materials
     const materials = createMaterials();
@@ -107,7 +159,7 @@ function init() {
 
     // Create collection bin
     const binFloor = createCollectionBin(materials);
-    internalFrame.add(binFloor);
+    collectionBinGroup.add(binFloor);
 
     // Create Power Box
     const powerBox = createPowerBox(materials);
@@ -160,6 +212,7 @@ function init() {
     const zoomSlider = document.getElementById('zoom-slider');
     const zoomInBtn = document.getElementById('zoom-in');
     const zoomOutBtn = document.getElementById('zoom-out');
+    const assembleButton = document.getElementById('assemble-button');
 
     // Initialize slider to current camera distance (inverted scale)
     zoomSlider.value = 180 - camera.position.length();
@@ -175,7 +228,9 @@ function init() {
         { id: 'toggle-motors', target: () => motorsGroup },
         { id: 'toggle-clamps', target: () => clampsGroup },
         { id: 'toggle-spirals', target: () => spiralsGroup },
-        { id: 'toggle-wiring', target: () => wiringGroup }
+        { id: 'toggle-wiring', target: () => wiringGroup },
+        { id: 'toggle-powerbox', target: () => powerBoxGroup },
+        { id: 'toggle-collectionbin', target: () => collectionBinGroup }
     ];
 
     menuHeader.addEventListener('click', () => {
@@ -225,7 +280,7 @@ function init() {
             isPartsView = true;
             renderer.domElement.style.display = 'none';
             partsOverlay.classList.add('active');
-            document.body.style.background = '#d4a574';
+            document.body.style.background = '#000';
 
             // Uncheck and hide frame toggles
             menuToggles.forEach(toggle => {
@@ -233,12 +288,20 @@ function init() {
                 element.checked = false;
                 toggle.target().visible = false;
             });
+
+            // Initialize cut list 3D viewers
+            setTimeout(() => {
+                initializeCutListViewers();
+            }, 100); // Small delay to ensure DOM is ready
         } else {
             // Return to 3D view
             isPartsView = false;
             renderer.domElement.style.display = 'block';
             partsOverlay.classList.remove('active');
             document.body.style.background = '';
+
+            // Clean up cut list viewers
+            cleanupCutListViewers();
 
             // Re-enable and check frame toggles
             menuToggles.forEach(toggle => {
@@ -271,6 +334,11 @@ function init() {
         isPaused = true;
         frameGroup.rotation.set(0, Math.PI * 0.25, 0);
     }
+
+    // Assemble button
+    assembleButton.addEventListener('click', () => {
+        assembleAnimation(menuToggles);
+    });
 
     animate();
 }

@@ -6,7 +6,7 @@
 - Interactive 3D model with full component visibility controls
 - Dimensions: 24"W × 60"H × 24"D
 - Grid: 3×5 = 15 product slots
-- Cut list view for plywood panel planning
+- Components view for plywood panel planning
 - Modular codebase for easy maintenance
 
 **Files:**

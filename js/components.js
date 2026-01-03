@@ -21,14 +21,14 @@ function createTopBottomSides(materials) {
     // Side panels
     const leftSide = new THREE.Mesh(
         new THREE.BoxGeometry(thickness, height, depth),
-        materials.plywood
+        materials.plywoodPanel
     );
     leftSide.position.x = -width/2;
     group.add(leftSide);
 
     const rightSide = new THREE.Mesh(
         new THREE.BoxGeometry(thickness, height, depth),
-        materials.plywood
+        materials.plywoodPanel
     );
     rightSide.position.x = width/2;
     group.add(rightSide);
@@ -85,62 +85,6 @@ function createShelf(rowIndex, materials) {
     return group;
 }
 
-function createWiring(materials) {
-    const group = new THREE.Group();
-    const wireMaterial = new THREE.LineBasicMaterial({ color: CONFIG.wiring.color });
-    
-    // Power Box Position (Target)
-    const powerBoxY = -CONFIG.frame.height/2 + CONFIG.powerbox.height/2 + CONFIG.frame.thickness;
-    const powerBoxZ = -CONFIG.frame.depth/2 + CONFIG.powerbox.depth/2 + 1;
-    
-    // Main Trunk (Vertical run up the back wall)
-    const trunkX = 0; // Center
-    const trunkZ = -CONFIG.frame.depth/2 + 1; // Against back wall
-    
-    const trunkGeometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(trunkX, powerBoxY, trunkZ),
-        new THREE.Vector3(trunkX, CONFIG.frame.height/2 - 5, trunkZ)
-    ]);
-    const trunk = new THREE.Line(trunkGeometry, wireMaterial);
-    group.add(trunk);
-
-    // Wiring for each row
-    for (let row = 1; row <= CONFIG.grid.rows; row++) {
-        const shelfY = getShelfY(row);
-        const shelfBackZ = getBackZ() - (CONFIG.shelves.depth / 2); // Back edge of sliding shelf
-        
-        // 1. Connection from Main Trunk to Service Loop Point (Fixed on wall)
-        const wallPoint = new THREE.Vector3(trunkX, shelfY + 2, trunkZ);
-        
-        // 2. Service Loop (Flexible curve from Wall to Shelf)
-        // Shelf connection point (center of shelf backplate)
-        const shelfPoint = new THREE.Vector3(0, shelfY + 2, shelfBackZ);
-        
-        const curve = new THREE.QuadraticBezierCurve3(
-            wallPoint,
-            new THREE.Vector3(0, shelfY - 4, (trunkZ + shelfBackZ) / 2), // Dip down for slack
-            shelfPoint
-        );
-        const loopPoints = curve.getPoints(20);
-        const loopGeometry = new THREE.BufferGeometry().setFromPoints(loopPoints);
-        group.add(new THREE.Line(loopGeometry, wireMaterial));
-
-        // 3. Distribution along the shelf backplate to motors
-        for (let col = 0; col < CONFIG.grid.cols; col++) {
-            const slotPos = getSlotCenter(row, col);
-            const motorX = slotPos.x;
-            
-            // Wire from center of shelf backplate to specific motor
-            const motorWireGeom = new THREE.BufferGeometry().setFromPoints([
-                shelfPoint, // Center of shelf backplate
-                new THREE.Vector3(motorX, shelfY + 2, shelfBackZ) // To motor location
-            ]);
-            group.add(new THREE.Line(motorWireGeom, wireMaterial));
-        }
-    }
-
-    return group;
-}
 
 function createRails(rowIndex, materials) {
     const group = new THREE.Group();
@@ -169,12 +113,15 @@ function createRails(rowIndex, materials) {
 function createDividers(rowIndex, materials) {
     const group = new THREE.Group();
     const y = getShelfY(rowIndex) + CONFIG.dividers.height/2;
-    const z = getBackZ();
+
+    // Divider should touch backplate but not overlap
+    const dividerDepth = CONFIG.shelves.depth - CONFIG.shelves.backplateThickness;
+    const z = getBackZ() + CONFIG.shelves.backplateThickness / 2;
 
     // Create dividers based on grid columns
     for (let col = 1; col < CONFIG.grid.cols; col++) {
         const divider = new THREE.Mesh(
-            new THREE.BoxGeometry(CONFIG.frame.thickness, CONFIG.dividers.height, CONFIG.shelves.depth),
+            new THREE.BoxGeometry(CONFIG.frame.thickness, CONFIG.dividers.height, dividerDepth),
             materials.plywood
         );
         divider.position.set(-CONFIG.frame.width/2 + (col * CONFIG.slot.width), y, z);
@@ -282,22 +229,60 @@ function createPowerBox(materials) {
 
 function createWiring(materials) {
     const group = new THREE.Group();
-    const wireMaterial = new THREE.LineBasicMaterial({ color: CONFIG.wiring.color });
-    
+
+    // Create materials for the 3 wires: Power+, Power-, Control
+    const wireRadius = 0.25; // Thicker wires for better visibility
+    const wireColors = [
+        0xff0000, // Red - Power+
+        0xff8800, // Orange - Power-
+        0x00ff00  // Green - Control
+    ];
+    const wireMaterials = wireColors.map(color => new THREE.MeshBasicMaterial({ color }));
+
+    // Helper function to create a tube between two points
+    function createWireTube(start, end, material) {
+        const direction = new THREE.Vector3().subVectors(end, start);
+        const length = direction.length();
+        const geometry = new THREE.CylinderGeometry(wireRadius, wireRadius, length, 8);
+        const wire = new THREE.Mesh(geometry, material);
+
+        // Position at midpoint
+        wire.position.copy(start).add(direction.multiplyScalar(0.5));
+
+        // Rotate to align with direction
+        wire.quaternion.setFromUnitVectors(
+            new THREE.Vector3(0, 1, 0),
+            direction.normalize()
+        );
+
+        return wire;
+    }
+
+    // Helper function to create curved wire tube
+    function createCurvedWireTube(curve, material) {
+        const tubeGeometry = new THREE.TubeGeometry(curve, 20, wireRadius, 8, false);
+        return new THREE.Mesh(tubeGeometry, material);
+    }
+
     // Power Box Position (Target)
     const powerBoxY = -CONFIG.frame.height/2 + CONFIG.powerbox.height/2 + CONFIG.frame.thickness;
     const powerBoxZ = -CONFIG.frame.depth/2 + CONFIG.powerbox.depth/2 + 1;
-    
-    // Main Trunk (Vertical run up the back wall)
+
+    // Main Trunk (Vertical run up the back wall) - 3 wires side by side
     const trunkX = 0; // Center
     const trunkZ = -CONFIG.frame.depth/2 + 1; // Against back wall
-    
-    const trunkGeometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(trunkX, powerBoxY, trunkZ),
-        new THREE.Vector3(trunkX, CONFIG.frame.height/2 - 5, trunkZ)
-    ]);
-    const trunk = new THREE.Line(trunkGeometry, wireMaterial);
-    group.add(trunk);
+    const wireSpacing = 0.6; // Increased spacing for better visibility
+
+    const trunkStart = new THREE.Vector3(trunkX, powerBoxY, trunkZ);
+    const trunkEnd = new THREE.Vector3(trunkX, CONFIG.frame.height/2 - 5, trunkZ);
+
+    // Create 3 parallel trunk wires
+    for (let i = 0; i < 3; i++) {
+        const offset = (i - 1) * wireSpacing; // -wireSpacing, 0, +wireSpacing
+        const start = trunkStart.clone().add(new THREE.Vector3(offset, 0, 0));
+        const end = trunkEnd.clone().add(new THREE.Vector3(offset, 0, 0));
+        group.add(createWireTube(start, end, wireMaterials[i]));
+    }
 
     // Wiring for each row
     for (let row = 1; row <= CONFIG.grid.rows; row++) {
@@ -305,35 +290,35 @@ function createWiring(materials) {
         const shelfFloorY = shelfY + (CONFIG.frame.thickness / 2);
         const motorY = shelfFloorY + CONFIG.spiral.radius;
         const shelfBackZ = getBackZ() - (CONFIG.shelves.depth / 2); // Back edge of sliding shelf
-        
-        // 1. Connection from Main Trunk to Service Loop Point (Fixed on wall)
-        // Adjust loop attach point slightly lower than motor height
-        const wallPoint = new THREE.Vector3(trunkX, motorY, trunkZ);
-        
-        // 2. Service Loop (Flexible curve from Wall to Shelf)
-        // Shelf connection point (center of shelf backplate at motor height)
-        const shelfPoint = new THREE.Vector3(0, motorY, shelfBackZ);
-        
-        const curve = new THREE.QuadraticBezierCurve3(
-            wallPoint,
-            new THREE.Vector3(0, motorY - 6, (trunkZ + shelfBackZ) / 2), // Dip down more for slack
-            shelfPoint
-        );
-        const loopPoints = curve.getPoints(20);
-        const loopGeometry = new THREE.BufferGeometry().setFromPoints(loopPoints);
-        group.add(new THREE.Line(loopGeometry, wireMaterial));
 
-        // 3. Distribution along the shelf backplate to motors
+        // Service Loop (Flexible curve from Wall to Shelf) - 3 wires bundled
+        for (let i = 0; i < 3; i++) {
+            const offset = (i - 1) * wireSpacing;
+            const wallPoint = new THREE.Vector3(trunkX + offset, motorY, trunkZ);
+            const shelfPoint = new THREE.Vector3(0 + offset, motorY, shelfBackZ);
+
+            // Create a more visible curve that bows out to the side
+            const sideOffset = (i - 1) * 3; // Each wire bows out differently
+            const curve = new THREE.QuadraticBezierCurve3(
+                wallPoint,
+                new THREE.Vector3(0 + offset + sideOffset, motorY - 6, (trunkZ + shelfBackZ) / 2), // Bow out sideways + dip down
+                shelfPoint
+            );
+            group.add(createCurvedWireTube(curve, wireMaterials[i]));
+        }
+
+        // Distribution along the shelf backplate to motors - 3 wires to each motor
         for (let col = 0; col < CONFIG.grid.cols; col++) {
             const slotPos = getSlotCenter(row, col);
             const motorX = slotPos.x;
-            
-            // Wire from center of shelf backplate to specific motor
-            const motorWireGeom = new THREE.BufferGeometry().setFromPoints([
-                shelfPoint, // Center of shelf backplate
-                new THREE.Vector3(motorX, motorY, shelfBackZ) // To motor location
-            ]);
-            group.add(new THREE.Line(motorWireGeom, wireMaterial));
+
+            for (let i = 0; i < 3; i++) {
+                const offset = (i - 1) * wireSpacing;
+                const zOffset = (i - 1) * wireRadius * 2.5; // Offset in Z to prevent overlap
+                const start = new THREE.Vector3(0 + offset, motorY, shelfBackZ + zOffset);
+                const end = new THREE.Vector3(motorX + offset, motorY, shelfBackZ + zOffset);
+                group.add(createWireTube(start, end, wireMaterials[i]));
+            }
         }
     }
 
