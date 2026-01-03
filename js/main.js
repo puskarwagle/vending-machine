@@ -7,6 +7,7 @@ let isPartsView = false;
 let isPaused = false;
 let defaultCameraPos = { x: 50, y: 40, z: 70 };
 let isAssembling = false;
+let assemblyTimeouts = []; // Track assembly animation timeouts
 let animationFrameId = null;
 let isDirty = true; // Flag to track if scene needs re-render
 let eventListeners = []; // Store event listeners for cleanup
@@ -15,6 +16,11 @@ let materials = null; // Store materials for lazy loading
 // Touch control variables
 let touchStartX = 0, touchStartY = 0;
 let lastTouchDistance = 0;
+// Loading state management
+let isMainSceneReady = false;
+let areCutListViewersReady = false;
+let mainLoadingOverlay = null;
+let partsLoadingOverlay = null;
 
 // Helper function to mark scene as needing re-render
 function setDirty() {
@@ -25,6 +31,45 @@ function setDirty() {
 function addTrackedListener(element, event, handler) {
     element.addEventListener(event, handler);
     eventListeners.push({ element, event, handler });
+}
+
+// Loading state management functions
+function initLoadingOverlays() {
+    mainLoadingOverlay = document.getElementById('main-loading-overlay');
+    partsLoadingOverlay = document.getElementById('parts-loading-overlay');
+}
+
+function hideMainLoading() {
+    if (mainLoadingOverlay && !isMainSceneReady) {
+        isMainSceneReady = true;
+        mainLoadingOverlay.classList.add('hidden');
+        // Remove from DOM after transition completes
+        setTimeout(() => {
+            if (mainLoadingOverlay) {
+                mainLoadingOverlay.style.display = 'none';
+            }
+        }, 300);
+    }
+}
+
+function showPartsLoading() {
+    if (partsLoadingOverlay) {
+        partsLoadingOverlay.classList.remove('hidden');
+        partsLoadingOverlay.classList.add('active');
+    }
+}
+
+function hidePartsLoading() {
+    if (partsLoadingOverlay) {
+        partsLoadingOverlay.classList.add('hidden');
+        // Remove active class after transition
+        setTimeout(() => {
+            if (partsLoadingOverlay) {
+                partsLoadingOverlay.classList.remove('active');
+                partsLoadingOverlay.classList.remove('hidden');
+            }
+        }, 300);
+    }
 }
 
 // Lazy loading function for motor assemblies
@@ -45,10 +90,31 @@ function ensureMotorsCreated() {
     setDirty();
 }
 
+// Stop assembly animation
+function stopAssembly() {
+    if (!isAssembling) return;
+
+    // Clear all pending timeouts
+    assemblyTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    assemblyTimeouts = [];
+
+    // Reset assembly state
+    const assembleButton = document.getElementById('assemble-button');
+    if (assembleButton) {
+        assembleButton.disabled = false;
+        assembleButton.textContent = 'Assemble';
+    }
+    isAssembling = false;
+}
+
 // Assembly animation function - shows components one by one from inner to outer
 function assembleAnimation(menuToggles) {
     if (isAssembling) return; // Prevent multiple simultaneous animations
     isAssembling = true;
+
+    // Clear any existing timeouts first
+    assemblyTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
+    assemblyTimeouts = [];
 
     // Ensure motors are created before assembly
     ensureMotorsCreated();
@@ -86,7 +152,7 @@ function assembleAnimation(menuToggles) {
 
     // Show components sequentially
     assemblyOrder.forEach((toggleId, index) => {
-        setTimeout(() => {
+        const timeoutId = setTimeout(() => {
             const toggle = menuToggles.find(t => t.id === toggleId);
             if (toggle) {
                 const element = document.getElementById(toggleId);
@@ -97,17 +163,24 @@ function assembleAnimation(menuToggles) {
 
             // Re-enable button after last component
             if (index === assemblyOrder.length - 1) {
-                setTimeout(() => {
+                const finalTimeoutId = setTimeout(() => {
                     assembleButton.disabled = false;
                     assembleButton.textContent = 'Assemble';
                     isAssembling = false;
+                    assemblyTimeouts = [];
                 }, 500);
+                assemblyTimeouts.push(finalTimeoutId);
             }
         }, index * delay);
+
+        assemblyTimeouts.push(timeoutId);
     });
 }
 
 function init() {
+    // Initialize loading overlays
+    initLoadingOverlays();
+
     // Generate and populate cut list
     const partsOverlay = document.getElementById('parts-overlay');
     partsOverlay.innerHTML = generateCutList();
@@ -316,6 +389,9 @@ function init() {
 
     addTrackedListener(toggleCutlist, 'change', (e) => {
         if (e.target.checked) {
+            // Stop any ongoing assembly animation
+            stopAssembly();
+
             // Switch to parts view
             isPartsView = true;
             renderer.domElement.style.display = 'none';
@@ -329,10 +405,18 @@ function init() {
                 toggle.target().visible = false;
             });
 
-            // Initialize cut list 3D viewers
-            setTimeout(() => {
+            // Show loading overlay
+            showPartsLoading();
+
+            // Initialize cut list 3D viewers after next paint
+            requestAnimationFrame(() => {
                 initializeCutListViewers();
-            }, 100); // Small delay to ensure DOM is ready
+                areCutListViewersReady = true;
+                // Hide loading after a brief moment to ensure all viewers are rendered
+                requestAnimationFrame(() => {
+                    hidePartsLoading();
+                });
+            });
         } else {
             // Return to 3D view
             isPartsView = false;
@@ -342,6 +426,7 @@ function init() {
 
             // Clean up cut list viewers
             cleanupCutListViewers();
+            areCutListViewersReady = false;
 
             // Re-enable and check frame toggles
             menuToggles.forEach(toggle => {
@@ -541,6 +626,11 @@ function animate() {
     if (isDirty) {
         renderer.render(scene, camera);
         isDirty = false;
+
+        // Hide main loading overlay after first successful render
+        if (!isMainSceneReady) {
+            hideMainLoading();
+        }
     }
 }
 

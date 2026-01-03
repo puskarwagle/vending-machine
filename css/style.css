@@ -1,5 +1,77 @@
 body { margin: 0; overflow: hidden; font-family: Arial, sans-serif; }
 canvas { display: block; }
+
+/* Loading Overlays */
+#main-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #1a1a1a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+#main-loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#parts-loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 310px;
+    width: calc(100% - 310px);
+    height: 100%;
+    background: #000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 1;
+    transition: opacity 0.3s ease-out;
+}
+
+#parts-loading-overlay.active {
+    display: flex;
+}
+
+#parts-loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(255, 255, 255, 0.1);
+    border-top: 4px solid rgba(100, 200, 100, 0.8);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #fff;
+    font-size: 18px;
+    font-weight: normal;
+}
 #info {
     position: absolute;
     top: 10px;
