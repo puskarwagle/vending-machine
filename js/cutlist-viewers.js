@@ -5,6 +5,8 @@ import { createMaterials } from './materials.js';
 // Cut List 3D Viewers - Mini Three.js scenes for each component
 let cutlistViewers = [];
 let cutlistAnimationFrame = null;
+let viewerEventListeners = []; // Track event listeners for cleanup
+let globalAutoRotate = true; // Global rotation control
 
 export function initializeCutListViewers() {
     // Clean up any existing viewers first
@@ -317,13 +319,62 @@ export function initializeCutListViewers() {
         const component = config.create();
         scene.add(component);
 
+        // Track hover state and auto-rotation
+        let isHovered = false;
+        let autoRotate = true;
+
+        // Mouse enter/leave handlers
+        const handleMouseEnter = () => {
+            isHovered = true;
+        };
+
+        const handleMouseLeave = () => {
+            isHovered = false;
+        };
+
+        // Wheel handler for rotation on scroll
+        const handleWheel = (e) => {
+            if (isHovered) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Rotate based on scroll delta
+                // Use deltaY for vertical scroll rotation around X axis
+                // Use deltaX for horizontal scroll rotation around Y axis
+                component.rotation.x += e.deltaY * 0.005;
+                component.rotation.y += e.deltaX * 0.005;
+
+                // Temporarily disable auto-rotation when user scrolls
+                autoRotate = false;
+
+                // Re-enable auto-rotation after 1 second of no scrolling
+                clearTimeout(component.userData.autoRotateTimeout);
+                component.userData.autoRotateTimeout = setTimeout(() => {
+                    autoRotate = true;
+                }, 1000);
+            }
+        };
+
+        // Add event listeners
+        container.addEventListener('mouseenter', handleMouseEnter);
+        container.addEventListener('mouseleave', handleMouseLeave);
+        container.addEventListener('wheel', handleWheel, { passive: false });
+
+        // Track listeners for cleanup
+        viewerEventListeners.push(
+            { element: container, event: 'mouseenter', handler: handleMouseEnter },
+            { element: container, event: 'mouseleave', handler: handleMouseLeave },
+            { element: container, event: 'wheel', handler: handleWheel }
+        );
+
         // Store viewer data
         cutlistViewers.push({
             id: config.id,
             scene,
             camera,
             renderer,
-            component
+            component,
+            autoRotate: () => autoRotate
         });
     });
 
@@ -335,10 +386,21 @@ export function animateCutListViewers() {
     cutlistAnimationFrame = requestAnimationFrame(animateCutListViewers);
 
     cutlistViewers.forEach(viewer => {
-        // Rotate component slowly
-        viewer.component.rotation.y += 0.005;
+        // Auto-rotate component slowly only when enabled (global and local)
+        if (globalAutoRotate && viewer.autoRotate()) {
+            viewer.component.rotation.y += 0.005;
+        }
         viewer.renderer.render(viewer.scene, viewer.camera);
     });
+}
+
+// Export functions to control global rotation
+export function pauseCutListViewers() {
+    globalAutoRotate = false;
+}
+
+export function playCutListViewers() {
+    globalAutoRotate = true;
 }
 
 export function cleanupCutListViewers() {
@@ -348,8 +410,19 @@ export function cleanupCutListViewers() {
         cutlistAnimationFrame = null;
     }
 
+    // Remove event listeners
+    viewerEventListeners.forEach(({ element, event, handler }) => {
+        element.removeEventListener(event, handler);
+    });
+    viewerEventListeners = [];
+
     // Clean up each viewer
     cutlistViewers.forEach(viewer => {
+        // Clear any pending timeouts
+        if (viewer.component?.userData?.autoRotateTimeout) {
+            clearTimeout(viewer.component.userData.autoRotateTimeout);
+        }
+
         if (viewer.renderer) {
             viewer.renderer.dispose();
         }
@@ -368,4 +441,6 @@ export function cleanupCutListViewers() {
     });
 
     cutlistViewers = [];
+    // Reset global rotation to default
+    globalAutoRotate = true;
 }

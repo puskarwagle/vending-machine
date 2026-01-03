@@ -214,19 +214,35 @@ export function createMotorAssembly(row, col, materials) {
 }
 
 export function createPowerBox(materials) {
+    // Load textures for vending board
+    const textureLoader = new THREE.TextureLoader();
+    const frontTexture = textureLoader.load('images/vending-board-front.jpg');
+    const backTexture = textureLoader.load('images/vending-board-back.jpg');
+
+    // Create materials for each face of the box
+    // BoxGeometry face order: right, left, top, bottom, front, back
+    const boxMaterials = [
+        new THREE.MeshPhongMaterial({ map: frontTexture }), // right
+        new THREE.MeshPhongMaterial({ map: backTexture }), // left
+        new THREE.MeshPhongMaterial({ map: frontTexture }), // top
+        new THREE.MeshPhongMaterial({ map: backTexture }), // bottom
+        new THREE.MeshPhongMaterial({ map: frontTexture }), // front
+        new THREE.MeshPhongMaterial({ map: backTexture })   // back
+    ];
+
     const powerBox = new THREE.Mesh(
         new THREE.BoxGeometry(CONFIG.powerbox.width, CONFIG.powerbox.height, CONFIG.powerbox.depth),
-        new THREE.MeshPhongMaterial({ color: CONFIG.powerbox.color, shininess: 50 })
+        boxMaterials
     );
-    
+
     // Position at the bottom, in the empty space behind the collection bin
     // Bottom of frame is -CONFIG.frame.height/2
     // Sits on floor: y = -height/2 + boxHeight/2
     // Back gap center: z = -9 (calculated from bin position)
-    
+
     const y = -CONFIG.frame.height/2 + CONFIG.powerbox.height/2 + CONFIG.frame.thickness;
     const z = -CONFIG.frame.depth/2 + CONFIG.powerbox.depth/2 + 1; // Slight gap from back wall
-    
+
     powerBox.position.set(0, y, z);
     return powerBox;
 }

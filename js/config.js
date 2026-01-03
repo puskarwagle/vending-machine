@@ -21,7 +21,7 @@ export const CONFIG = {
     },
     shelves: {
         depth: 18,  // Shallower than frame depth to create collection area
-        backplateHeight: 4,
+        backplateHeight: 5,
         backplateThickness: 0.33
     },
     wiring: {

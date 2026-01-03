@@ -116,7 +116,7 @@ canvas {
     display: none;
     overflow-y: auto;
     overflow-x: hidden;
-    background: #000;
+    background: #1a1a1a;
     scroll-snap-type: y mandatory;
     z-index: 10;
 }
@@ -169,7 +169,7 @@ canvas {
     height: 100vh;
     display: flex;
     gap: 40px;
-    background: #000;
+    background: #1a1a1a;
     padding: 60px;
     align-items: center;
     justify-content: center;
@@ -190,7 +190,7 @@ canvas {
 .component-viewer {
     width: 500px;
     height: 500px;
-    background: #000;
+    background: #1a1a1a;
     border: 1px solid #fff;
     flex-shrink: 0;
 }
@@ -209,7 +209,7 @@ canvas {
     justify-content: center;
     gap: 20px;
     padding: 40px;
-    background: #000;
+    background: #1a1a1a;
     color: #fff;
     border: 1px solid #fff;
     flex-shrink: 0;

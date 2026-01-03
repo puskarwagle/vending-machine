@@ -206,12 +206,14 @@ export function generateMenuHTML() {
     let html = `
         <ul class="menu w-full grow p-2 gap-1">
             <!-- View Controls Section -->
-            <li class="menu-title text-base-content/60 text-xs font-semibold uppercase tracking-wider px-4 py-2">View Controls</li>
+            <li class="px-4 pt-3 pb-1">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">View Controls</div>
+            </li>
 
             <!-- Zoom Control -->
             <li class="px-2 py-2">
                 <div class="flex flex-col gap-2">
-                    <label class="text-xs text-base-content/70">Zoom</label>
+                    <label class="text-xs text-base-content/60 font-medium">Zoom</label>
                     <div class="flex items-center gap-2">
                         <button id="zoom-out" class="btn btn-xs btn-square btn-ghost">−</button>
                         <input type="range" id="zoom-slider" min="30" max="150" value="70" class="range range-xs flex-1" />
@@ -220,38 +222,63 @@ export function generateMenuHTML() {
                 </div>
             </li>
 
-            <!-- Pause Toggle -->
+            <!-- Play/Pause Button -->
             <li class="px-2">
-                <label class="label cursor-pointer justify-start gap-3 py-2">
-                    <input type="checkbox" id="toggle-pause" class="toggle toggle-sm" />
-                    <span class="label-text text-sm">Pause & Front View</span>
-                </label>
+                <button id="toggle-pause" class="flex justify-center items-center w-full py-3 transition-opacity hover:opacity-60 cursor-pointer" data-playing="true">
+                    <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="6" y="4" width="4" height="16"></rect>
+                        <rect x="14" y="4" width="4" height="16"></rect>
+                    </svg>
+                    <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                </button>
             </li>
 
-            <li><div class="divider my-1"></div></li>
+            <li><div class="divider my-2"></div></li>
 
             <!-- Actions Section -->
-            <li class="menu-title text-base-content/60 text-xs font-semibold uppercase tracking-wider px-4 py-2">Actions</li>
+            <li class="px-4 pt-1 pb-1">
+                <div class="text-[10px] font-bold uppercase tracking-widest text-base-content/40">Actions</div>
+            </li>
             <li class="px-2 py-1">
-                <div class="flex flex-wrap gap-2">
-                    <button id="assemble-button" class="flex-1 basis-[calc(50%-0.25rem)] btn btn-sm btn-neutral h-10" data-active="false">Assemble</button>
-                    <button id="show-components-button" class="flex-1 basis-[calc(50%-0.25rem)] btn btn-sm btn-neutral h-10" data-active="false">Show Components</button>
+                <div class="flex flex-col gap-2">
+                    <button id="assemble-button" class="btn btn-md btn-ghost border border-base-content/20 hover:border-base-content/40 w-full" data-active="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Assemble
+                    </button>
+                    <button id="show-components-button" class="btn btn-md btn-ghost border border-base-content/20 hover:border-base-content/40 w-full" data-active="false">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        Show Components
+                    </button>
                 </div>
             </li>
 
-            <li><div class="divider my-1"></div></li>
+            <li><div class="divider my-2"></div></li>
 
             <!-- Component Visibility Section -->
-            <li class="menu-title text-base-content/60 text-xs font-semibold uppercase tracking-wider px-4 py-2">Components</li>
+            <li class="px-4 pt-1 pb-2">
+                <div class="flex items-center justify-between">
+                    <div class="text-sm font-bold text-base-content/90">Components</div>
+                    <input type="checkbox" id="toggle-all-components" class="toggle toggle-sm" checked />
+                </div>
+            </li>
     `;
 
     // Generate groups
     toggleGroups.forEach(group => {
         html += `
             <li>
-                <details open class="collapse collapse-arrow bg-base-200 rounded-lg p-0" style="pointer-events: none;">
+                <details open class="collapse collapse-arrow bg-base-200/50 rounded-lg p-0" style="pointer-events: none;">
                     <summary class="collapse-title min-h-0 py-2 px-3 text-sm font-medium" style="opacity: 0; height: 0; min-height: 0; padding: 0; margin: 0; position: absolute;">hidden</summary>
-                    <div class="py-2 px-3 text-sm font-medium">${group.title}</div>
+                    <div class="py-2 px-3 text-xs font-semibold text-base-content/50 uppercase tracking-wide">${group.title}</div>
                     <div class="collapse-content px-2 pb-2" style="pointer-events: auto;">
                         <div class="flex flex-wrap gap-2">
         `;
@@ -260,7 +287,7 @@ export function generateMenuHTML() {
             html += `
                             <button
                                 id="${toggle.id}"
-                                class="component-toggle-btn flex-1 basis-[calc(50%-0.25rem)] btn btn-sm ${toggle.checked ? 'btn-primary' : 'btn-outline'}"
+                                class="component-toggle-btn flex-1 basis-[calc(50%-0.25rem)] btn btn-sm ${toggle.checked ? 'bg-base-content/10 border-base-content/30' : 'btn-ghost border border-base-content/10'} hover:bg-base-content/20"
                                 data-active="${toggle.checked}"
                             >
                                 ${toggle.label}
@@ -279,12 +306,12 @@ export function generateMenuHTML() {
     // Dimensions section
     const dimensionsContent = generateDimensionsDisplay();
     html += `
-            <li><div class="divider my-1"></div></li>
+            <li><div class="divider my-2"></div></li>
 
-            <li class="bg-base-200 rounded-lg p-0 w-full">
-                <div class="py-2 px-3 text-sm font-medium">Dimensions</div>
+            <li class="bg-base-200/50 rounded-lg p-0 w-full">
+                <div class="py-2 px-3 text-xs font-semibold text-base-content/50 uppercase tracking-wide">Dimensions</div>
                 <div class="px-3 pb-2 w-full">
-                    <div class="text-xs space-y-1">
+                    <div class="text-xs space-y-1 text-base-content/70">
                         ${dimensionsContent}
                     </div>
                 </div>

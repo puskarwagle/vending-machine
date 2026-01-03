@@ -14,7 +14,7 @@ import {
     createWiring
 } from './components.js';
 import { generateMenuHTML, generateCutList } from './ui.js';
-import { initializeCutListViewers, cleanupCutListViewers } from './cutlist-viewers.js';
+import { initializeCutListViewers, cleanupCutListViewers, pauseCutListViewers, playCutListViewers } from './cutlist-viewers.js';
 
 // Module state variables
 let scene, camera, renderer;
@@ -120,10 +120,15 @@ function stopAssembly() {
     const assembleButton = document.getElementById('assemble-button');
     if (assembleButton) {
         assembleButton.disabled = false;
-        assembleButton.textContent = 'Assemble';
+        assembleButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+            </svg>
+            Assemble
+        `;
         assembleButton.dataset.active = 'false';
-        assembleButton.classList.remove('btn-success');
-        assembleButton.classList.add('btn-neutral');
+        assembleButton.classList.remove('bg-base-content/20', 'border-base-content/40');
+        assembleButton.classList.add('border-base-content/20');
     }
     isAssembling = false;
 }
@@ -142,14 +147,17 @@ function assembleAnimation(menuToggles) {
 
     const assembleButton = document.getElementById('assemble-button');
     assembleButton.disabled = true;
-    assembleButton.textContent = 'Assembling...';
+    assembleButton.innerHTML = `
+        <span class="loading loading-spinner loading-sm"></span>
+        Assembling...
+    `;
 
     // First, deactivate all and hide all components
     menuToggles.forEach(toggle => {
         const element = document.getElementById(toggle.id);
         element.dataset.active = 'false';
-        element.classList.remove('btn-primary');
-        element.classList.add('btn-outline');
+        element.classList.remove('bg-base-content/10', 'border-base-content/30');
+        element.classList.add('btn-ghost', 'border', 'border-base-content/10');
         toggle.target().visible = false;
     });
     setDirty();
@@ -180,8 +188,8 @@ function assembleAnimation(menuToggles) {
             if (toggle) {
                 const element = document.getElementById(toggleId);
                 element.dataset.active = 'true';
-                element.classList.remove('btn-outline');
-                element.classList.add('btn-primary');
+                element.classList.remove('btn-ghost', 'border', 'border-base-content/10');
+                element.classList.add('bg-base-content/10', 'border-base-content/30');
                 toggle.target().visible = true;
                 setDirty();
             }
@@ -190,10 +198,15 @@ function assembleAnimation(menuToggles) {
             if (index === assemblyOrder.length - 1) {
                 const finalTimeoutId = setTimeout(() => {
                     assembleButton.disabled = false;
-                    assembleButton.textContent = 'Assemble';
+                    assembleButton.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        </svg>
+                        Assemble
+                    `;
                     assembleButton.dataset.active = 'false';
-                    assembleButton.classList.remove('btn-success');
-                    assembleButton.classList.add('btn-neutral');
+                    assembleButton.classList.remove('bg-base-content/20', 'border-base-content/40');
+                    assembleButton.classList.add('border-base-content/20');
                     isAssembling = false;
                     assemblyTimeouts = [];
                 }, 500);
@@ -352,6 +365,7 @@ function init() {
     const zoomInBtn = document.getElementById('zoom-in');
     const zoomOutBtn = document.getElementById('zoom-out');
     const assembleButton = document.getElementById('assemble-button');
+    const toggleAllComponents = document.getElementById('toggle-all-components');
 
     // Initialize slider to current camera distance (inverted scale)
     zoomSlider.value = 180 - camera.position.length();
@@ -428,17 +442,25 @@ function init() {
         menuToggles.forEach(toggle => {
             const element = document.getElementById(toggle.id);
             element.dataset.active = 'true';
-            element.classList.remove('btn-outline');
-            element.classList.add('btn-primary');
+            element.classList.remove('btn-ghost', 'border', 'border-base-content/10');
+            element.classList.add('bg-base-content/10', 'border-base-content/30');
             toggle.target().visible = true;
         });
         setDirty();
 
         // Update button states
-        showComponentsButton.textContent = 'Show Components';
+        showComponentsButton.innerHTML = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="7" height="7"></rect>
+                <rect x="14" y="3" width="7" height="7"></rect>
+                <rect x="14" y="14" width="7" height="7"></rect>
+                <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+            Show Components
+        `;
         showComponentsButton.dataset.active = 'false';
-        showComponentsButton.classList.remove('btn-success');
-        showComponentsButton.classList.add('btn-neutral');
+        showComponentsButton.classList.remove('bg-base-content/20', 'border-base-content/40');
+        showComponentsButton.classList.add('border-base-content/20');
     }
 
     addTrackedListener(showComponentsButton, 'click', () => {
@@ -456,8 +478,8 @@ function init() {
             menuToggles.forEach(toggle => {
                 const element = document.getElementById(toggle.id);
                 element.dataset.active = 'false';
-                element.classList.remove('btn-primary');
-                element.classList.add('btn-outline');
+                element.classList.remove('bg-base-content/10', 'border-base-content/30');
+                element.classList.add('btn-ghost', 'border', 'border-base-content/10');
                 toggle.target().visible = false;
             });
 
@@ -467,6 +489,10 @@ function init() {
             // Initialize cut list 3D viewers after next paint
             requestAnimationFrame(() => {
                 initializeCutListViewers();
+                // Sync rotation state with main view
+                if (isPaused) {
+                    pauseCutListViewers();
+                }
                 areCutListViewersReady = true;
                 // Hide loading after a brief moment to ensure all viewers are rendered
                 requestAnimationFrame(() => {
@@ -475,15 +501,20 @@ function init() {
             });
 
             // Update button states
-            showComponentsButton.textContent = 'Back to 3D View';
+            showComponentsButton.innerHTML = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 18l-6-6 6-6"></path>
+                </svg>
+                Back to 3D View
+            `;
             showComponentsButton.dataset.active = 'true';
-            showComponentsButton.classList.remove('btn-neutral');
-            showComponentsButton.classList.add('btn-success');
+            showComponentsButton.classList.remove('border-base-content/20');
+            showComponentsButton.classList.add('bg-base-content/20', 'border-base-content/40');
 
             // Deactivate assemble button
             assembleButton.dataset.active = 'false';
-            assembleButton.classList.remove('btn-success');
-            assembleButton.classList.add('btn-neutral');
+            assembleButton.classList.remove('bg-base-content/20', 'border-base-content/40');
+            assembleButton.classList.add('border-base-content/20');
         } else {
             switchTo3DView();
         }
@@ -528,11 +559,11 @@ function init() {
 
             // Update button styling
             if (newActive) {
-                element.classList.remove('btn-outline');
-                element.classList.add('btn-primary');
+                element.classList.remove('btn-ghost', 'border', 'border-base-content/10');
+                element.classList.add('bg-base-content/10', 'border-base-content/30');
             } else {
-                element.classList.remove('btn-primary');
-                element.classList.add('btn-outline');
+                element.classList.remove('bg-base-content/10', 'border-base-content/30');
+                element.classList.add('btn-ghost', 'border', 'border-base-content/10');
             }
 
             // Lazy load motors if needed
@@ -554,19 +585,61 @@ function init() {
         toggle.target().visible = isActive;
     });
 
-    addTrackedListener(togglePause, 'change', (e) => {
-        isPaused = e.target.checked;
-        if (isPaused) {
+    addTrackedListener(togglePause, 'click', () => {
+        isPaused = !isPaused;
+        const isPlaying = !isPaused;
+
+        // Update button state
+        togglePause.dataset.playing = isPlaying;
+
+        // Toggle icon visibility
+        const pauseIcon = document.getElementById('pause-icon');
+        const playIcon = document.getElementById('play-icon');
+        if (isPlaying) {
+            pauseIcon.style.display = 'block';
+            playIcon.style.display = 'none';
+            // Resume cutlist viewers rotation
+            playCutListViewers();
+        } else {
+            pauseIcon.style.display = 'none';
+            playIcon.style.display = 'block';
+            // Set to front view when paused
             frameGroup.rotation.set(0, Math.PI * 0.25, 0);
-            setDirty();
+            // Pause cutlist viewers rotation
+            pauseCutListViewers();
         }
+
+        setDirty();
     });
 
-    // Ensure state matches checkbox on load (e.g. after refresh)
-    if (togglePause.checked) {
-        isPaused = true;
-        frameGroup.rotation.set(0, Math.PI * 0.25, 0);
-    }
+    // Toggle all components handler
+    addTrackedListener(toggleAllComponents, 'change', (e) => {
+        const showAll = e.target.checked;
+
+        menuToggles.forEach(toggle => {
+            const element = document.getElementById(toggle.id);
+            element.dataset.active = showAll;
+
+            // Update button styling
+            if (showAll) {
+                element.classList.remove('btn-ghost', 'border', 'border-base-content/10');
+                element.classList.add('bg-base-content/10', 'border-base-content/30');
+            } else {
+                element.classList.remove('bg-base-content/10', 'border-base-content/30');
+                element.classList.add('btn-ghost', 'border', 'border-base-content/10');
+            }
+
+            // Lazy load motors if needed
+            const motorRelatedIds = ['toggle-motors', 'toggle-clamps', 'toggle-spirals'];
+            if (motorRelatedIds.includes(toggle.id) && showAll) {
+                ensureMotorsCreated();
+            }
+
+            toggle.target().visible = showAll;
+        });
+
+        setDirty();
+    });
 
     // Assemble button
     addTrackedListener(assembleButton, 'click', () => {
@@ -577,12 +650,12 @@ function init() {
 
         // Update button states
         assembleButton.dataset.active = 'true';
-        assembleButton.classList.remove('btn-neutral');
-        assembleButton.classList.add('btn-success');
+        assembleButton.classList.remove('border-base-content/20');
+        assembleButton.classList.add('bg-base-content/20', 'border-base-content/40');
 
         showComponentsButton.dataset.active = 'false';
-        showComponentsButton.classList.remove('btn-success');
-        showComponentsButton.classList.add('btn-neutral');
+        showComponentsButton.classList.remove('bg-base-content/20', 'border-base-content/40');
+        showComponentsButton.classList.add('border-base-content/20');
 
         // Start assembly animation
         assembleAnimation(menuToggles);
