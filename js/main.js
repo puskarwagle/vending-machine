@@ -7,11 +7,48 @@ let isPartsView = false;
 let isPaused = false;
 let defaultCameraPos = { x: 50, y: 40, z: 70 };
 let isAssembling = false;
+let animationFrameId = null;
+let isDirty = true; // Flag to track if scene needs re-render
+let eventListeners = []; // Store event listeners for cleanup
+let motorsCreated = false; // Flag to track if motor assemblies have been created
+let materials = null; // Store materials for lazy loading
+
+// Helper function to mark scene as needing re-render
+function setDirty() {
+    isDirty = true;
+}
+
+// Helper function to add event listener and track it for cleanup
+function addTrackedListener(element, event, handler) {
+    element.addEventListener(event, handler);
+    eventListeners.push({ element, event, handler });
+}
+
+// Lazy loading function for motor assemblies
+function ensureMotorsCreated() {
+    if (motorsCreated || !materials) return;
+
+    // Create dispensing mechanisms for all slots
+    for (let row = 1; row <= CONFIG.grid.rows; row++) {
+        for (let col = 0; col < CONFIG.grid.cols; col++) {
+            const assembly = createMotorAssembly(row, col, materials);
+            motorsGroup.add(assembly.motor);
+            clampsGroup.add(assembly.bracket);
+            spiralsGroup.add(assembly.spiral);
+        }
+    }
+
+    motorsCreated = true;
+    setDirty();
+}
 
 // Assembly animation function - shows components one by one from inner to outer
 function assembleAnimation(menuToggles) {
     if (isAssembling) return; // Prevent multiple simultaneous animations
     isAssembling = true;
+
+    // Ensure motors are created before assembly
+    ensureMotorsCreated();
 
     const assembleButton = document.getElementById('assemble-button');
     assembleButton.disabled = true;
@@ -23,6 +60,7 @@ function assembleAnimation(menuToggles) {
         element.checked = false;
         toggle.target().visible = false;
     });
+    setDirty();
 
     // Assembly order (inner to outer)
     const assemblyOrder = [
@@ -51,6 +89,7 @@ function assembleAnimation(menuToggles) {
                 const element = document.getElementById(toggleId);
                 element.checked = true;
                 toggle.target().visible = true;
+                setDirty();
             }
 
             // Re-enable button after last component
@@ -143,7 +182,7 @@ function init() {
     frameGroup.add(collectionBinGroup);
 
     // Create materials
-    const materials = createMaterials();
+    materials = createMaterials();
 
     // Create top bottom sides
     const topBottomSides = createTopBottomSides(materials);
@@ -186,23 +225,15 @@ function init() {
         dividersGroup.add(...dividers.children);
     }
 
-    // Create dispensing mechanisms for all slots
-    for (let row = 1; row <= CONFIG.grid.rows; row++) {
-        for (let col = 0; col < CONFIG.grid.cols; col++) {
-            const assembly = createMotorAssembly(row, col, materials);
-            motorsGroup.add(assembly.motor);
-            clampsGroup.add(assembly.bracket);
-            spiralsGroup.add(assembly.spiral);
-        }
-    }
+    // Motor assemblies will be created lazily when first needed (see ensureMotorsCreated)
 
     // Mouse controls
-    renderer.domElement.addEventListener('mousedown', onMouseDown);
-    renderer.domElement.addEventListener('mousemove', onMouseMove);
-    renderer.domElement.addEventListener('mouseup', onMouseUp);
-    renderer.domElement.addEventListener('wheel', onWheel);
+    addTrackedListener(renderer.domElement, 'mousedown', onMouseDown);
+    addTrackedListener(renderer.domElement, 'mousemove', onMouseMove);
+    addTrackedListener(renderer.domElement, 'mouseup', onMouseUp);
+    addTrackedListener(renderer.domElement, 'wheel', onWheel);
 
-    window.addEventListener('resize', onWindowResize);
+    addTrackedListener(window, 'resize', onWindowResize);
 
     // Menu controls - dynamic setup
     const menuHeader = document.getElementById('menu-header');
@@ -233,7 +264,7 @@ function init() {
         { id: 'toggle-collectionbin', target: () => collectionBinGroup }
     ];
 
-    menuHeader.addEventListener('click', () => {
+    addTrackedListener(menuHeader, 'click', () => {
         menu.classList.toggle('collapsed');
     });
 
@@ -254,27 +285,28 @@ function init() {
             camera.position.z * ratio
         );
         camera.lookAt(0, 0, 0);
+        setDirty();
     }
 
-    zoomSlider.addEventListener('input', (e) => {
+    addTrackedListener(zoomSlider, 'input', (e) => {
         updateZoom(e.target.value);
     });
 
-    zoomInBtn.addEventListener('click', () => {
+    addTrackedListener(zoomInBtn, 'click', () => {
         const currentSliderValue = parseFloat(zoomSlider.value);
         const newSliderValue = Math.min(150, currentSliderValue + 5);
         zoomSlider.value = newSliderValue;
         updateZoom(newSliderValue);
     });
 
-    zoomOutBtn.addEventListener('click', () => {
+    addTrackedListener(zoomOutBtn, 'click', () => {
         const currentSliderValue = parseFloat(zoomSlider.value);
         const newSliderValue = Math.max(30, currentSliderValue - 5);
         zoomSlider.value = newSliderValue;
         updateZoom(newSliderValue);
     });
 
-    toggleCutlist.addEventListener('change', (e) => {
+    addTrackedListener(toggleCutlist, 'change', (e) => {
         if (e.target.checked) {
             // Switch to parts view
             isPartsView = true;
@@ -309,23 +341,37 @@ function init() {
                 element.checked = true;
                 toggle.target().visible = true;
             });
+            setDirty();
         }
     });
 
     // Setup visibility toggles dynamically
     menuToggles.forEach(toggle => {
         const element = document.getElementById(toggle.id);
-        element.addEventListener('change', (e) => {
+        addTrackedListener(element, 'change', (e) => {
+            // Lazy load motors if needed
+            const motorRelatedIds = ['toggle-motors', 'toggle-clamps', 'toggle-spirals'];
+            if (motorRelatedIds.includes(toggle.id) && e.target.checked) {
+                ensureMotorsCreated();
+            }
+
             toggle.target().visible = e.target.checked;
+            setDirty();
         });
         // Initialize visibility based on checkbox state
+        // For motor-related components, create them first if they're checked on load
+        const motorRelatedIds = ['toggle-motors', 'toggle-clamps', 'toggle-spirals'];
+        if (motorRelatedIds.includes(toggle.id) && element.checked) {
+            ensureMotorsCreated();
+        }
         toggle.target().visible = element.checked;
     });
 
-    togglePause.addEventListener('change', (e) => {
+    addTrackedListener(togglePause, 'change', (e) => {
         isPaused = e.target.checked;
         if (isPaused) {
             frameGroup.rotation.set(0, Math.PI * 0.25, 0);
+            setDirty();
         }
     });
 
@@ -336,7 +382,7 @@ function init() {
     }
 
     // Assemble button
-    assembleButton.addEventListener('click', () => {
+    addTrackedListener(assembleButton, 'click', () => {
         assembleAnimation(menuToggles);
     });
 
@@ -360,6 +406,7 @@ function onMouseMove(e) {
 
     mouseX = e.clientX;
     mouseY = e.clientY;
+    setDirty();
 }
 
 function onMouseUp() {
@@ -390,20 +437,65 @@ function onWheel(e) {
         frameGroup.rotation.y += e.deltaX * 0.005;
         frameGroup.rotation.x += e.deltaY * 0.005;
     }
+    setDirty();
 }
 
 function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
+    setDirty();
 }
 
 function animate() {
-    requestAnimationFrame(animate);
+    animationFrameId = requestAnimationFrame(animate);
+
+    // Auto-rotation marks scene as dirty
     if (!isPartsView && !isPaused) {
         frameGroup.rotation.y += 0.002; // Slow auto-rotation
+        isDirty = true;
     }
-    renderer.render(scene, camera);
+
+    // Only render if scene has changed
+    if (isDirty) {
+        renderer.render(scene, camera);
+        isDirty = false;
+    }
 }
+
+// Cleanup function to stop animation and free resources
+function cleanup() {
+    // Stop animation loop
+    if (animationFrameId !== null) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+
+    // Remove all event listeners
+    eventListeners.forEach(({ element, event, handler }) => {
+        element.removeEventListener(event, handler);
+    });
+    eventListeners = [];
+
+    // Dispose Three.js resources
+    if (renderer) {
+        renderer.dispose();
+    }
+    if (scene) {
+        scene.traverse((object) => {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+                if (Array.isArray(object.material)) {
+                    object.material.forEach(material => material.dispose());
+                } else {
+                    object.material.dispose();
+                }
+            }
+        });
+    }
+}
+
+// Register cleanup on page unload
+window.addEventListener('beforeunload', cleanup);
 
 init();
