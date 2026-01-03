@@ -1,5 +1,9 @@
+import * as THREE from 'three';
+import { CONFIG } from './config.js';
+import { getShelfY, getBackZ, getSlotCenter } from './utils.js';
+
 // Component factory functions
-function createBackPanel(materials) {
+export function createBackPanel(materials) {
     const group = new THREE.Group();
     const { width, height, depth, thickness } = CONFIG.frame;
 
@@ -14,7 +18,7 @@ function createBackPanel(materials) {
     return group;
 }
 
-function createTopBottomSides(materials) {
+export function createTopBottomSides(materials) {
     const group = new THREE.Group();
     const { width, height, depth, thickness } = CONFIG.frame;
 
@@ -56,7 +60,7 @@ function createTopBottomSides(materials) {
     return group;
 }
 
-function createShelf(rowIndex, materials) {
+export function createShelf(rowIndex, materials) {
     const group = new THREE.Group();
     const y = getShelfY(rowIndex);
     const zBack = getBackZ(); // This is the center Z of the shelf
@@ -86,7 +90,7 @@ function createShelf(rowIndex, materials) {
 }
 
 
-function createRails(rowIndex, materials) {
+export function createRails(rowIndex, materials) {
     const group = new THREE.Group();
     const y = getShelfY(rowIndex) - CONFIG.rails.gap;
     const z = getBackZ();
@@ -110,7 +114,7 @@ function createRails(rowIndex, materials) {
     return group;
 }
 
-function createDividers(rowIndex, materials) {
+export function createDividers(rowIndex, materials) {
     const group = new THREE.Group();
     const y = getShelfY(rowIndex) + CONFIG.dividers.height/2;
 
@@ -131,7 +135,7 @@ function createDividers(rowIndex, materials) {
     return group;
 }
 
-function createCollectionBin(materials) {
+export function createCollectionBin(materials) {
     const binFloor = new THREE.Mesh(
         new THREE.BoxGeometry(CONFIG.frame.width, CONFIG.frame.thickness, CONFIG.frame.depth - 6),
         materials.plywood
@@ -141,7 +145,7 @@ function createCollectionBin(materials) {
     return binFloor;
 }
 
-function createGlassFront(materials) {
+export function createGlassFront(materials) {
     const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
     const glass = new THREE.Mesh(
         new THREE.BoxGeometry(CONFIG.frame.width, glassHeight, CONFIG.glass.thickness),
@@ -151,7 +155,7 @@ function createGlassFront(materials) {
     return glass;
 }
 
-function createMotorAssembly(row, col, materials) {
+export function createMotorAssembly(row, col, materials) {
     const assembly = { motor: null, bracket: null, spiral: null };
     
     // Calculate positions relative to shelf
@@ -209,7 +213,7 @@ function createMotorAssembly(row, col, materials) {
     return assembly;
 }
 
-function createPowerBox(materials) {
+export function createPowerBox(materials) {
     const powerBox = new THREE.Mesh(
         new THREE.BoxGeometry(CONFIG.powerbox.width, CONFIG.powerbox.height, CONFIG.powerbox.depth),
         new THREE.MeshPhongMaterial({ color: CONFIG.powerbox.color, shininess: 50 })
@@ -227,7 +231,7 @@ function createPowerBox(materials) {
     return powerBox;
 }
 
-function createWiring(materials) {
+export function createWiring(materials) {
     const group = new THREE.Group();
 
     // Create materials for the 3 wires: Power+, Power-, Control

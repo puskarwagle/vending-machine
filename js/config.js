@@ -1,5 +1,5 @@
 // Configuration - all dimensions and parameters in one place
-const CONFIG = {
+export const CONFIG = {
     frame: {
         width: 24,
         height: 60,

@@ -1,5 +1,7 @@
+import { CONFIG } from './config.js';
+
 // Generate dimensions display dynamically from CONFIG
-function generateDimensionsDisplay() {
+export function generateDimensionsDisplay() {
     const { width, height, depth } = CONFIG.frame;
     const widthCm = (width * 2.54).toFixed(0);
     const heightCm = (height * 2.54).toFixed(0);
@@ -29,7 +31,7 @@ function generateDimensionsDisplay() {
 }
 
 // Generate cut list dynamically from CONFIG
-function generateCutList() {
+export function generateCutList() {
     const { width, height, depth, thickness } = CONFIG.frame;
     const shelfWidth = width;
     const shelfDepth = CONFIG.shelves.depth;

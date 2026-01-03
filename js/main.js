@@ -1,4 +1,22 @@
-// Global state variables
+import * as THREE from 'three';
+import { CONFIG } from './config.js';
+import { createMaterials } from './materials.js';
+import {
+    createBackPanel,
+    createTopBottomSides,
+    createShelf,
+    createRails,
+    createDividers,
+    createCollectionBin,
+    createGlassFront,
+    createMotorAssembly,
+    createPowerBox,
+    createWiring
+} from './components.js';
+import { generateDimensionsDisplay, generateCutList } from './ui.js';
+import { initializeCutListViewers, cleanupCutListViewers } from './cutlist-viewers.js';
+
+// Module state variables
 let scene, camera, renderer;
 let frameGroup, topBottomSidesGroup, backPanelGroup, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
 let shelvesGroup, railsGroup, dividersGroup, powerBoxGroup, collectionBinGroup;

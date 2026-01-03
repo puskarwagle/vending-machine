@@ -1,5 +1,7 @@
+import * as THREE from 'three';
+
 // Create all materials
-function createMaterials() {
+export function createMaterials() {
     const textureLoader = new THREE.TextureLoader();
 
     // Load textures

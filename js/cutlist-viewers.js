@@ -1,8 +1,12 @@
+import * as THREE from 'three';
+import { CONFIG } from './config.js';
+import { createMaterials } from './materials.js';
+
 // Cut List 3D Viewers - Mini Three.js scenes for each component
 let cutlistViewers = [];
 let cutlistAnimationFrame = null;
 
-function initializeCutListViewers() {
+export function initializeCutListViewers() {
     // Clean up any existing viewers first
     cleanupCutListViewers();
 
@@ -327,7 +331,7 @@ function initializeCutListViewers() {
     animateCutListViewers();
 }
 
-function animateCutListViewers() {
+export function animateCutListViewers() {
     cutlistAnimationFrame = requestAnimationFrame(animateCutListViewers);
 
     cutlistViewers.forEach(viewer => {
@@ -337,7 +341,7 @@ function animateCutListViewers() {
     });
 }
 
-function cleanupCutListViewers() {
+export function cleanupCutListViewers() {
     // Stop animation
     if (cutlistAnimationFrame) {
         cancelAnimationFrame(cutlistAnimationFrame);
