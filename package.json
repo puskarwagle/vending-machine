@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
+    "start": "vite preview",
     "watch": "nodemon --exec vite",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
