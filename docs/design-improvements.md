@@ -1,60 +1,60 @@
-# Vending Machine Design Analysis & Improvements
+# Vending Machine Required Components
 
-## Design Strengths
+## Current Design Strengths
 - Well-organized component structure
 - Good material variety (plywood, glass, metal)
 - Proper shelving system with dividers
 - Working dispensing mechanism (motors, spirals, clamps)
 
-## What's Missing or Could Be Improved
+## Electronics & Control System
 
-### Critical Missing Elements
+### Already Have
+- ✅ ESP32 with WiFi module
 
-1. **Payment System** - No coin slot, card reader, or payment interface
-2. **User Interface** - No keypad/number pad for product selection
-3. **Display Screen** - Missing LCD/LED display to show prices and selections
-4. **Product Pricing** - No visual indicators of prices
-5. **Product Labels** - No label system for product identification
-6. **Hinges/Opening Mechanism** - Glass front has no hinges or locking mechanism
-7. **Lighting** - No internal LED strips to illuminate products
-8. **Temperature Control** - No cooling system (vents, fans, refrigeration unit if needed)
+### To Purchase
+- ✅ ESP32 LVGL 2.8" LCD touchscreen display
+- LED lighting strips (internal product illumination)
+- Motor driver module (L298N or relay board for dispensing motors)
 
-### Structural/Functional Issues
+## Structural Hardware Required
 
-9. **Door Handle** - No handle on the glass front for maintenance access
-10. **Security Locks** - Missing locks for the front door and collection bin
-11. **Coin Return/Change Dispenser** - No mechanism to return change
-12. **Anti-theft Features** - No sensors or security elements
-13. **Ventilation** - No air vents for electronics cooling
-14. **Cable Management** - Wiring is visible but no cable channels/conduits
-15. **Leveling Feet** - Only wheels, no adjustable feet for stability when stationary
+### Door & Security
+- Door hinges for glass front (2-3 pieces)
+- Security lock for front door
+- Security lock for collection bin
 
-### Design Polish
+## Payment System
+- QR code payment integration only (eSewa/Khalti)
+- Display QR codes on LCD touchscreen
+- No physical payment hardware required
 
-16. **Branding Area** - No space for logo/company branding
-17. **Product Visibility** - Could add internal lighting for better product display
-18. **Accessibility** - No consideration for wheelchair-accessible height for controls
-19. **Emergency Stop** - No visible emergency power-off button
-20. **Service Manual Holder** - No document holder for instructions/certifications
+## Explicitly Not Required
+- ❌ Temperature control/cooling system
+- ❌ Door handle (maintenance access via unlocking)
+- ❌ Ventilation system for cooling
+- ❌ Coin/note acceptor
+- ❌ Change dispenser
+- ❌ Physical keypad (touchscreen handles input)
 
-## Recommended Additions
+## Implementation Checklist
 
-### High Priority
-- **Payment panel** (top-right of glass front)
-- **Keypad** (below payment system)
-- **Digital display** (above keypad)
-- **Door hinges** (left or right side of glass)
-- **Security lock** (on glass border)
+### Critical Components (Must Have)
+1. **ESP32 LVGL 2.8" LCD Touchscreen** - User interface and QR code display
+2. **Door Hinges** - Glass front opening mechanism
+3. **Security Locks (x2)** - Front door and collection bin
+4. **Motor Driver Module** - Control dispensing motors
+5. **LED Strips** - Internal product illumination
 
-### Medium Priority
-- **Internal LED strips** (under each shelf)
-- **Product pusher mechanism** (to move products forward)
-- **Door handle** (center or side of glass)
-- **Ventilation system** (if electronics require cooling)
+### Optional Enhancements
+- Product pusher mechanism (to move items forward)
+- Cable management channels/conduits
+- Branding panel area (top front)
+- Leveling feet for stability when stationary
+- Product label holders
 
-### Nice to Have
-- **Cooling vents** (sides/back if refrigeration needed)
-- **Branding panel** (top front)
-- **Service access documentation**
-- **Anti-theft sensors**
-- **Leveling feet** (for stability)
+## Total New Parts Summary
+1. ESP32 LVGL 2.8" LCD touchscreen display
+2. LED lighting strips
+3. Motor driver module (L298N or similar)
+4. Door hinges (2-3)
+5. Security locks (2)
