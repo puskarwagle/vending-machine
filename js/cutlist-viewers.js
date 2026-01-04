@@ -223,6 +223,213 @@ export function initializeCutListViewers() {
             cameraDistance: 20
         },
         {
+            id: 'dividers',
+            create: () => {
+                const divider = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.frame.thickness, CONFIG.dividers.height, CONFIG.shelves.depth - CONFIG.shelves.backplateThickness),
+                    materials.plywood
+                );
+                return divider;
+            },
+            cameraDistance: 20
+        },
+        {
+            id: 'glassfrontborder',
+            create: () => {
+                const group = new THREE.Group();
+                const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
+                const borderThickness = 1.5;
+                
+                // Simplified border for viewer
+                const top = new THREE.Mesh(new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness), materials.aluminumBracket);
+                top.position.y = glassHeight / 2;
+                group.add(top);
+                
+                const bottom = new THREE.Mesh(new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness), materials.aluminumBracket);
+                bottom.position.y = -glassHeight / 2;
+                group.add(bottom);
+                
+                const left = new THREE.Mesh(new THREE.BoxGeometry(borderThickness, glassHeight, borderThickness), materials.aluminumBracket);
+                left.position.x = -CONFIG.frame.width / 2;
+                group.add(left);
+                
+                const right = new THREE.Mesh(new THREE.BoxGeometry(borderThickness, glassHeight, borderThickness), materials.aluminumBracket);
+                right.position.x = CONFIG.frame.width / 2;
+                group.add(right);
+                
+                return group;
+            },
+            cameraDistance: 65
+        },
+        {
+            id: 'clamps',
+            create: () => {
+                const bracket = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.bracket.width, CONFIG.bracket.height, CONFIG.bracket.thickness),
+                    materials.bracket
+                );
+                return bracket;
+            },
+            cameraDistance: 10
+        },
+        {
+            id: 'spirals',
+            create: () => {
+                const points = [];
+                for (let i = 0; i <= 100; i++) {
+                    const t = i / 100;
+                    const angle = t * CONFIG.spiral.turns * Math.PI * 2;
+                    const x = Math.cos(angle) * CONFIG.spiral.radius;
+                    const y = Math.sin(angle) * CONFIG.spiral.radius;
+                    const z = t * CONFIG.spiral.length;
+                    points.push(new THREE.Vector3(x, y, z));
+                }
+                const curve = new THREE.CatmullRomCurve3(points);
+                const spiral = new THREE.Mesh(
+                    new THREE.TubeGeometry(curve, 200, CONFIG.spiral.tubeRadius, 8, false),
+                    materials.spiral
+                );
+                // Center the spiral
+                spiral.position.z = -CONFIG.spiral.length / 2;
+                return spiral;
+            },
+            cameraDistance: 25
+        },
+        {
+            id: 'binflap',
+            create: () => {
+                const flap = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.frame.width - 4, 8, CONFIG.glass.thickness),
+                    materials.glass
+                );
+                return flap;
+            },
+            cameraDistance: 30
+        },
+        {
+            id: 'binflapborder',
+            create: () => {
+                const group = new THREE.Group();
+                const borderThickness = 1.5;
+                const flapHeight = 8;
+                
+                const top = new THREE.Mesh(new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness), materials.aluminumBracket);
+                top.position.y = flapHeight / 2;
+                group.add(top);
+                
+                const bottom = new THREE.Mesh(new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness), materials.aluminumBracket);
+                bottom.position.y = -flapHeight / 2;
+                group.add(bottom);
+                
+                return group;
+            },
+            cameraDistance: 30
+        },
+        {
+            id: 'wheels',
+            create: () => {
+                const group = new THREE.Group();
+                const wheelRadius = 1;
+                const wheelThickness = 0.75;
+                const wheel = new THREE.Mesh(
+                    new THREE.CylinderGeometry(wheelRadius, wheelRadius, wheelThickness, 16),
+                    materials.motor
+                );
+                wheel.rotation.z = Math.PI / 2;
+                return wheel;
+            },
+            cameraDistance: 10
+        },
+        {
+            id: 'touchscreen',
+            create: () => {
+                const group = new THREE.Group();
+                const housing = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.touchscreen.width, CONFIG.touchscreen.height, CONFIG.touchscreen.depth),
+                    materials.plastic
+                );
+                group.add(housing);
+                const screen = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.touchscreen.width - 0.3, CONFIG.touchscreen.height - 0.3, CONFIG.touchscreen.screenInset),
+                    materials.screen
+                );
+                screen.position.z = CONFIG.touchscreen.depth / 2;
+                group.add(screen);
+                return group;
+            },
+            cameraDistance: 10
+        },
+        {
+            id: 'doorhinges',
+            create: () => {
+                const group = new THREE.Group();
+                const barrel = new THREE.Mesh(
+                    new THREE.CylinderGeometry(CONFIG.hinge.barrelRadius, CONFIG.hinge.barrelRadius, CONFIG.hinge.length, 16),
+                    materials.aluminumBracket
+                );
+                barrel.rotation.x = Math.PI / 2;
+                group.add(barrel);
+                const plate = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.hinge.width, CONFIG.hinge.length, CONFIG.hinge.thickness),
+                    materials.aluminumBracket
+                );
+                plate.position.x = CONFIG.hinge.width / 2 + CONFIG.hinge.barrelRadius / 2;
+                group.add(plate);
+                return group;
+            },
+            cameraDistance: 10
+        },
+        {
+            id: 'securitylocks',
+            create: () => {
+                const group = new THREE.Group();
+                const body = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.securityLock.width, CONFIG.securityLock.height, CONFIG.securityLock.depth),
+                    materials.lock
+                );
+                group.add(body);
+                const cylinder = new THREE.Mesh(
+                    new THREE.CylinderGeometry(0.3, 0.3, 0.5, 16),
+                    materials.lock
+                );
+                cylinder.rotation.x = Math.PI / 2;
+                cylinder.position.z = CONFIG.securityLock.depth / 2 + 0.2;
+                group.add(cylinder);
+                return group;
+            },
+            cameraDistance: 10
+        },
+        {
+            id: 'motordriver',
+            create: () => {
+                const group = new THREE.Group();
+                const board = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.motorDriver.width, CONFIG.motorDriver.depth, CONFIG.motorDriver.height),
+                    materials.pcb
+                );
+                group.add(board);
+                const heatSink = new THREE.Mesh(
+                    new THREE.BoxGeometry(1.5, 1.5, 0.5),
+                    materials.aluminumBracket
+                );
+                heatSink.position.z = CONFIG.motorDriver.height / 2 + 0.25;
+                group.add(heatSink);
+                return group;
+            },
+            cameraDistance: 15
+        },
+        {
+            id: 'ledstrips',
+            create: () => {
+                const ledStrip = new THREE.Mesh(
+                    new THREE.BoxGeometry(CONFIG.frame.width - 2, CONFIG.ledStrip.height, CONFIG.ledStrip.width),
+                    materials.led
+                );
+                return ledStrip;
+            },
+            cameraDistance: 30
+        },
+        {
             id: 'wiring',
             create: () => {
                 const group = new THREE.Group();

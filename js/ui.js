@@ -173,6 +173,46 @@ export function generateCutList() {
             dimensions: `${1 * 2}" dia × ${0.75}" thick`,
             material: 'Metal/Rubber',
             description: 'Corner-mounted caster wheels for mobility'
+        },
+        {
+            id: 'touchscreen',
+            title: 'ESP32 LVGL LCD Touchscreen',
+            qty: 1,
+            dimensions: `${CONFIG.touchscreen.width}" × ${CONFIG.touchscreen.height}" × ${CONFIG.touchscreen.depth}" (2.8" diagonal)`,
+            material: 'Electronic Component',
+            description: 'User interface and QR code payment display'
+        },
+        {
+            id: 'doorhinges',
+            title: 'Door Hinges',
+            qty: 3,
+            dimensions: `${CONFIG.hinge.length}" × ${CONFIG.hinge.width}" × ${CONFIG.hinge.thickness}"`,
+            material: 'Aluminum',
+            description: 'Hinges for glass front door opening mechanism'
+        },
+        {
+            id: 'securitylocks',
+            title: 'Security Locks',
+            qty: 2,
+            dimensions: `${CONFIG.securityLock.width}" × ${CONFIG.securityLock.height}" × ${CONFIG.securityLock.depth}"`,
+            material: 'Metal Lock',
+            description: 'Front door lock and collection bin lock'
+        },
+        {
+            id: 'motordriver',
+            title: 'Motor Driver Board (L298N)',
+            qty: 1,
+            dimensions: `${CONFIG.motorDriver.width}" × ${CONFIG.motorDriver.depth}" × ${CONFIG.motorDriver.height}"`,
+            material: 'Electronic PCB',
+            description: 'Motor control board for dispensing mechanisms'
+        },
+        {
+            id: 'ledstrips',
+            title: 'LED Lighting Strips',
+            qty: CONFIG.grid.rows,
+            dimensions: `${CONFIG.frame.width - 2}" × ${CONFIG.ledStrip.height}" × ${CONFIG.ledStrip.width}"`,
+            material: 'LED Strip',
+            description: 'Internal product illumination (one per shelf)'
         }
     ];
 
@@ -263,11 +303,22 @@ export function generateMenuHTML() {
             toggles: [
                 { id: 'toggle-glass', label: 'Glass Front', checked: false },
                 { id: 'toggle-glassfrontborder', label: 'Glass Border', checked: true },
+                { id: 'toggle-doorhinges', label: 'Door Hinges', checked: true },
+                { id: 'toggle-securitylocks', label: 'Security Locks', checked: true },
                 { id: 'toggle-wiring', label: 'Wiring', checked: true },
                 { id: 'toggle-powerbox', label: 'Power Box', checked: true },
                 { id: 'toggle-collectionbin', label: 'Collection Bin', checked: true },
                 { id: 'toggle-binflap', label: 'Bin Flap', checked: true },
                 { id: 'toggle-binflapborder', label: 'Flap Border', checked: true }
+            ]
+        },
+        {
+            id: 'electronics-group',
+            title: 'Electronics',
+            toggles: [
+                { id: 'toggle-touchscreen', label: 'Touchscreen', checked: true },
+                { id: 'toggle-motordriver', label: 'Motor Driver', checked: true },
+                { id: 'toggle-ledstrips', label: 'LED Strips', checked: true }
             ]
         }
     ];

@@ -28,7 +28,12 @@ The visualizer breaks down the machine into logical parts, each modeled with rea
     *   **Collection Bin:** A slanted plywood floor at the bottom that guides dispensed items toward the front.
     *   **Bin Flap & Border:** A transparent acrylic flap with an aluminum border for user access to the dispensed items.
 *   **Glass Door:** A large transparent front panel with a structural aluminum border, allowing users to see the inventory.
+    *   **Door Hinges:** Aluminum barrel hinges that enable the front glass door to open.
+    *   **Security Locks:** Keyed cylinder locks for both the main front door and the collection bin flap.
 *   **Electronics:**
+    *   **Touchscreen:** An ESP32-powered LVGL LCD display (2.8" diagonal) mounted on the right panel for user interaction and QR code payments.
+    *   **Motor Driver Board:** An L298N motor control board positioned at the bottom near the power box.
+    *   **LED Lighting Strips:** Warm white LED strips mounted under the front edge of each shelf to provide internal product illumination.
     *   **Power Box:** A central enclosure at the bottom for the main control board and power supply.
     *   **Wiring System:** A detailed model of the electrical distribution, featuring a vertical main trunk and flexible "service loops" for each shelf to allow for maintenance and shelf movement. It includes color-coded wires for Power (+/-) and Control signals.
 *   **Mobility:** Four caster wheels mounted at the corners of the bottom panel.
@@ -53,7 +58,8 @@ The "Components" section is organized into collapsible groups:
 *   **Structure:** Frame panels and wheels.
 *   **Shelving System:** Shelves, rails, and dividers.
 *   **Mechanisms:** Motors, clamps, and spirals.
-*   **Additional Parts:** Glass front, wiring, power box, and collection bin.
+*   **Additional Parts:** Glass front, hinges, locks, wiring, power box, and collection bin components.
+*   **Electronics:** Touchscreen, motor driver, and LED lighting strips.
 
 **Interactive Feature:** When in the "Show Components" view, clicking any component toggle in the menu will automatically scroll the page to that specific part's entry in the list.
 

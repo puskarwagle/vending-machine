@@ -62,5 +62,35 @@ export const CONFIG = {
         length: 12,
         turns: 8,
         tubeRadius: 0.15
+    },
+    touchscreen: {
+        width: 2.8,  // 2.8" diagonal display
+        height: 2.1,
+        depth: 0.3,
+        screenInset: 0.05
+    },
+    hinge: {
+        length: 3,
+        width: 0.5,
+        thickness: 0.2,
+        barrelRadius: 0.25
+    },
+    securityLock: {
+        width: 1.5,
+        height: 3,
+        depth: 1,
+        color: 0x444444
+    },
+    motorDriver: {
+        width: 3.5,  // L298N board dimensions
+        height: 1.8,
+        depth: 2.5,
+        color: 0x0066cc  // Blue PCB
+    },
+    ledStrip: {
+        width: 0.3,
+        height: 0.1,
+        color: 0xffffaa,  // Warm white
+        emissive: 0xffffaa
     }
 };

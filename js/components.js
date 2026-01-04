@@ -515,3 +515,228 @@ export function createWiring(materials) {
 
     return group;
 }
+
+export function createTouchscreen(materials) {
+    const group = new THREE.Group();
+
+    // Housing (black plastic case)
+    const housing = new THREE.Mesh(
+        new THREE.BoxGeometry(CONFIG.touchscreen.width, CONFIG.touchscreen.height, CONFIG.touchscreen.depth),
+        materials.plastic
+    );
+    group.add(housing);
+
+    // Screen (glossy dark surface, slightly inset)
+    const screen = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            CONFIG.touchscreen.width - 0.3,
+            CONFIG.touchscreen.height - 0.3,
+            CONFIG.touchscreen.screenInset
+        ),
+        materials.screen
+    );
+    screen.position.z = CONFIG.touchscreen.depth / 2;
+    group.add(screen);
+
+    // Position on right side panel, near top
+    const x = CONFIG.frame.width / 2 + CONFIG.frame.thickness / 2;
+    const y = CONFIG.frame.height / 2 - CONFIG.touchscreen.height - 3;
+    const z = 0;
+
+    group.position.set(x, y, z);
+    group.rotation.y = Math.PI / 2; // Face outward from right side
+
+    return group;
+}
+
+export function createDoorHinges(materials) {
+    const group = new THREE.Group();
+    const numHinges = 3;
+
+    // Glass door dimensions
+    const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
+    const glassCenterY = CONFIG.slot.height / 2;
+    const glassTopY = glassCenterY + glassHeight / 2;
+    const glassBottomY = glassCenterY - glassHeight / 2;
+
+    // Hinge positions along left edge
+    const hingeYPositions = [
+        glassBottomY + 3,           // Bottom hinge
+        glassCenterY,                // Middle hinge
+        glassTopY - 3                // Top hinge
+    ];
+
+    const hingeX = -CONFIG.frame.width / 2 + 0.75; // Left edge of frame
+    const hingeZ = CONFIG.frame.depth / 2;         // Front of machine
+
+    hingeYPositions.forEach(y => {
+        const hinge = new THREE.Group();
+
+        // Hinge barrel (cylinder)
+        const barrel = new THREE.Mesh(
+            new THREE.CylinderGeometry(
+                CONFIG.hinge.barrelRadius,
+                CONFIG.hinge.barrelRadius,
+                CONFIG.hinge.length,
+                16
+            ),
+            materials.aluminumBracket
+        );
+        barrel.rotation.x = Math.PI / 2; // Vertical orientation
+        hinge.add(barrel);
+
+        // Hinge plates (2 flat pieces)
+        const plate1 = new THREE.Mesh(
+            new THREE.BoxGeometry(CONFIG.hinge.width, CONFIG.hinge.length, CONFIG.hinge.thickness),
+            materials.aluminumBracket
+        );
+        plate1.position.x = -CONFIG.hinge.width / 2 - CONFIG.hinge.barrelRadius / 2;
+        hinge.add(plate1);
+
+        const plate2 = new THREE.Mesh(
+            new THREE.BoxGeometry(CONFIG.hinge.width, CONFIG.hinge.length, CONFIG.hinge.thickness),
+            materials.aluminumBracket
+        );
+        plate2.position.x = CONFIG.hinge.width / 2 + CONFIG.hinge.barrelRadius / 2;
+        hinge.add(plate2);
+
+        hinge.position.set(hingeX, y, hingeZ);
+        group.add(hinge);
+    });
+
+    return group;
+}
+
+export function createSecurityLocks(materials) {
+    const locks = [];
+
+    // Lock 1: Front door (glass front, right edge, mid-height)
+    const lock1 = new THREE.Group();
+
+    const lockBody1 = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            CONFIG.securityLock.width,
+            CONFIG.securityLock.height,
+            CONFIG.securityLock.depth
+        ),
+        materials.lock
+    );
+    lock1.add(lockBody1);
+
+    // Cylinder for lock
+    const cylinder1 = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.3, 0.3, 0.5, 16),
+        materials.lock
+    );
+    cylinder1.rotation.x = Math.PI / 2;
+    cylinder1.position.z = CONFIG.securityLock.depth / 2 + 0.2;
+    lock1.add(cylinder1);
+
+    // Position on right edge of glass door
+    const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
+    const glassCenterY = CONFIG.slot.height / 2;
+    lock1.position.set(
+        CONFIG.frame.width / 2 - 2,
+        glassCenterY,
+        CONFIG.frame.depth / 2 + 0.3
+    );
+    locks.push(lock1);
+
+    // Lock 2: Collection bin flap (bottom right)
+    const lock2 = lock1.clone();
+
+    // Position on bin flap
+    const bottomY = -CONFIG.frame.height / 2 + CONFIG.frame.thickness / 2;
+    const flapGap = 1.5;
+    lock2.position.set(
+        CONFIG.frame.width / 2 - 2,
+        bottomY + flapGap + 2,
+        CONFIG.frame.depth / 2 + 0.3
+    );
+    locks.push(lock2);
+
+    return locks;
+}
+
+export function createMotorDriverBoard(materials) {
+    const group = new THREE.Group();
+
+    // PCB board (blue rectangle)
+    const board = new THREE.Mesh(
+        new THREE.BoxGeometry(
+            CONFIG.motorDriver.width,
+            CONFIG.motorDriver.depth,
+            CONFIG.motorDriver.height
+        ),
+        materials.pcb
+    );
+    group.add(board);
+
+    // Add some component details (capacitors as cylinders)
+    const capacitorPositions = [
+        { x: -0.8, z: 0.5 },
+        { x: 0.8, z: 0.5 }
+    ];
+
+    capacitorPositions.forEach(pos => {
+        const capacitor = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.3, 0.3, 0.8, 16),
+            materials.motor
+        );
+        capacitor.position.set(pos.x, pos.z, CONFIG.motorDriver.height / 2 + 0.4);
+        group.add(capacitor);
+    });
+
+    // Heat sink (aluminum)
+    const heatSink = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 1.5, 0.5),
+        materials.aluminumBracket
+    );
+    heatSink.position.set(0, 0, CONFIG.motorDriver.height / 2 + 0.25);
+    group.add(heatSink);
+
+    // Position near power box at bottom
+    const y = -CONFIG.frame.height / 2 + CONFIG.powerbox.height + CONFIG.motorDriver.depth / 2 + 1;
+    const z = -CONFIG.frame.depth / 2 + CONFIG.motorDriver.width / 2 + 2;
+
+    group.position.set(0, y, z);
+    group.rotation.x = Math.PI / 2; // Lay flat
+
+    return group;
+}
+
+export function createLEDStrips(materials) {
+    const group = new THREE.Group();
+
+    // Create LED strip for each shelf
+    for (let row = 1; row <= CONFIG.grid.rows; row++) {
+        const shelfY = getShelfY(row);
+        const shelfZ = getBackZ();
+
+        // LED strip at front edge of each shelf
+        const ledStrip = new THREE.Mesh(
+            new THREE.BoxGeometry(
+                CONFIG.frame.width - 2,
+                CONFIG.ledStrip.height,
+                CONFIG.ledStrip.width
+            ),
+            materials.led
+        );
+
+        // Position at front bottom edge of shelf
+        ledStrip.position.set(
+            0,
+            shelfY - CONFIG.frame.thickness / 2 - CONFIG.ledStrip.height / 2,
+            shelfZ + CONFIG.shelves.depth / 2 - 1
+        );
+
+        group.add(ledStrip);
+
+        // Add point light for each LED strip to create glow effect
+        const light = new THREE.PointLight(CONFIG.ledStrip.color, 0.3, 15);
+        light.position.copy(ledStrip.position);
+        group.add(light);
+    }
+
+    return group;
+}

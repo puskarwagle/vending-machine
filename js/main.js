@@ -16,7 +16,12 @@ import {
     createMotorAssembly,
     createPowerBox,
     createWiring,
-    createWheels
+    createWheels,
+    createTouchscreen,
+    createDoorHinges,
+    createSecurityLocks,
+    createMotorDriverBoard,
+    createLEDStrips
 } from './components.js';
 import { generateMenuHTML, generateCutList } from './ui.js';
 import { initializeCutListViewers, cleanupCutListViewers, pauseCutListViewers, playCutListViewers } from './cutlist-viewers.js';
@@ -25,6 +30,7 @@ import { initializeCutListViewers, cleanupCutListViewers, pauseCutListViewers, p
 let scene, camera, renderer;
 let frameGroup, sidesGroup, topBottomGroup, backPanelGroup, internalFrame, glassFront, glassFrontBorderGroup, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
 let shelvesGroup, railsGroup, dividersGroup, powerBoxGroup, collectionBinGroup, binFlapGroup, binFlapBorderGroup, wheelsGroup;
+let touchscreenGroup, doorHingesGroup, securityLocksGroup, motorDriverGroup, ledStripsGroup;
 let mouseDown = false, mouseX = 0, mouseY = 0;
 let isPartsView = false;
 let isPaused = false;
@@ -172,20 +178,25 @@ function assembleAnimation(menuToggles) {
         'toggle-shelves',       // 1. Shelves
         'toggle-rails',         // 2. Rails
         'toggle-backpanel',     // 3. Back Panel
-        'toggle-clamps',        // 4. Clamps
-        'toggle-motors',        // 5. Motors
-        'toggle-dividers',      // 6. Dividers
-        'toggle-spirals',       // 7. Spirals
-        'toggle-wiring',        // 8. Wiring
-        'toggle-wheels',        // 9. Wheels
-        'toggle-topbottom',     // 10. Bottom Panel
-        'toggle-powerbox',      // 11. Power Box
-        'toggle-collectionbin', // 12. Collection Bin
-        'toggle-binflap',       // 13. Bin Flap
-        'toggle-binflapborder', // 14. Flap Border
-        'toggle-glass',         // 15. Glass Front
-        'toggle-glassfrontborder', // 16. Glass Border
-        'toggle-sides'          // 17. Top and Sides
+        'toggle-ledstrips',     // 4. LED Strips
+        'toggle-clamps',        // 5. Clamps
+        'toggle-motors',        // 6. Motors
+        'toggle-dividers',      // 7. Dividers
+        'toggle-spirals',       // 8. Spirals
+        'toggle-wiring',        // 9. Wiring
+        'toggle-motordriver',   // 10. Motor Driver
+        'toggle-wheels',        // 11. Wheels
+        'toggle-topbottom',     // 12. Bottom Panel
+        'toggle-powerbox',      // 13. Power Box
+        'toggle-collectionbin', // 14. Collection Bin
+        'toggle-binflap',       // 15. Bin Flap
+        'toggle-binflapborder', // 16. Flap Border
+        'toggle-glass',         // 17. Glass Front
+        'toggle-glassfrontborder', // 18. Glass Border
+        'toggle-doorhinges',    // 19. Door Hinges
+        'toggle-securitylocks', // 20. Security Locks
+        'toggle-touchscreen',   // 21. Touchscreen
+        'toggle-sides'          // 22. Top and Sides
     ];
 
     // Delay between each component (0.5 seconds)
@@ -309,6 +320,14 @@ function init() {
     powerBoxGroup = new THREE.Group();
     frameGroup.add(powerBoxGroup);
 
+    // Motor Driver Group
+    motorDriverGroup = new THREE.Group();
+    frameGroup.add(motorDriverGroup);
+
+    // LED Strips Group
+    ledStripsGroup = new THREE.Group();
+    frameGroup.add(ledStripsGroup);
+
     // Collection Bin Group
     collectionBinGroup = new THREE.Group();
     frameGroup.add(collectionBinGroup);
@@ -324,6 +343,18 @@ function init() {
     // Glass Front Border Group
     glassFrontBorderGroup = new THREE.Group();
     frameGroup.add(glassFrontBorderGroup);
+
+    // Door Hinges Group
+    doorHingesGroup = new THREE.Group();
+    frameGroup.add(doorHingesGroup);
+
+    // Security Locks Group
+    securityLocksGroup = new THREE.Group();
+    frameGroup.add(securityLocksGroup);
+
+    // Touchscreen Group
+    touchscreenGroup = new THREE.Group();
+    frameGroup.add(touchscreenGroup);
 
     // Wheels Group
     wheelsGroup = new THREE.Group();
@@ -353,6 +384,18 @@ function init() {
     const glassFrontBorder = createGlassFrontBorder(materials);
     glassFrontBorderGroup.add(...glassFrontBorder.children);
 
+    // Create door hinges
+    const hinges = createDoorHinges(materials);
+    doorHingesGroup.add(hinges);
+
+    // Create security locks
+    const locks = createSecurityLocks(materials);
+    securityLocksGroup.add(...locks);
+
+    // Create touchscreen
+    const touchscreen = createTouchscreen(materials);
+    touchscreenGroup.add(touchscreen);
+
     // Create collection bin
     const binFloor = createCollectionBin(materials);
     collectionBinGroup.add(binFloor);
@@ -368,6 +411,14 @@ function init() {
     // Create Power Box
     const powerBox = createPowerBox(materials);
     powerBoxGroup.add(powerBox);
+
+    // Create Motor Driver
+    const motorDriver = createMotorDriverBoard(materials);
+    motorDriverGroup.add(motorDriver);
+
+    // Create LED Strips
+    const ledStrips = createLEDStrips(materials);
+    ledStripsGroup.add(ledStrips);
 
     // Create Wiring
     const wiring = createWiring(materials);
@@ -433,6 +484,8 @@ function init() {
         { id: 'toggle-dividers', target: () => dividersGroup },
         { id: 'toggle-glass', target: () => glassFront },
         { id: 'toggle-glassfrontborder', target: () => glassFrontBorderGroup },
+        { id: 'toggle-doorhinges', target: () => doorHingesGroup },
+        { id: 'toggle-securitylocks', target: () => securityLocksGroup },
         { id: 'toggle-motors', target: () => motorsGroup },
         { id: 'toggle-clamps', target: () => clampsGroup },
         { id: 'toggle-spirals', target: () => spiralsGroup },
@@ -440,7 +493,10 @@ function init() {
         { id: 'toggle-powerbox', target: () => powerBoxGroup },
         { id: 'toggle-collectionbin', target: () => collectionBinGroup },
         { id: 'toggle-binflap', target: () => binFlapGroup },
-        { id: 'toggle-binflapborder', target: () => binFlapBorderGroup }
+        { id: 'toggle-binflapborder', target: () => binFlapBorderGroup },
+        { id: 'toggle-touchscreen', target: () => touchscreenGroup },
+        { id: 'toggle-motordriver', target: () => motorDriverGroup },
+        { id: 'toggle-ledstrips', target: () => ledStripsGroup }
     ];
 
     // Zoom controls - maintains camera angle while zooming
@@ -615,7 +671,12 @@ function init() {
         'toggle-collectionbin': 'viewer-bin',
         'toggle-binflap': 'viewer-binflap',
         'toggle-binflapborder': 'viewer-binflapborder',
-        'toggle-wheels': 'viewer-wheels'
+        'toggle-wheels': 'viewer-wheels',
+        'toggle-touchscreen': 'viewer-touchscreen',
+        'toggle-doorhinges': 'viewer-doorhinges',
+        'toggle-securitylocks': 'viewer-securitylocks',
+        'toggle-motordriver': 'viewer-motordriver',
+        'toggle-ledstrips': 'viewer-ledstrips'
     };
 
     // Setup visibility toggles dynamically

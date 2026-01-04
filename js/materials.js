@@ -48,9 +48,9 @@ export function createMaterials() {
             side: THREE.DoubleSide,
             shininess: 100
         }),
-        rail: new THREE.MeshPhongMaterial({
+        rail: new THREE.MeshStandardMaterial({
             color: 0x777777,
-            shininess: 40,
+            roughness: 0.6,
             metalness: 0.6
         }),
         motor: new THREE.MeshPhongMaterial({
@@ -61,16 +61,39 @@ export function createMaterials() {
             color: 0x666666,
             shininess: 20
         }),
-        spiral: new THREE.MeshPhongMaterial({
+        spiral: new THREE.MeshStandardMaterial({
             color: 0xaaaaaa,
-            shininess: 80,
+            roughness: 0.2,
             metalness: 0.8
         }),
-        aluminumBracket: new THREE.MeshPhongMaterial({
+        aluminumBracket: new THREE.MeshStandardMaterial({
             color: 0xc0c0c0,
-            shininess: 60,
-            metalness: 0.7,
-            specular: 0xffffff
+            roughness: 0.4,
+            metalness: 0.7
+        }),
+        screen: new THREE.MeshPhongMaterial({
+            color: 0x111111,
+            shininess: 100,
+            specular: 0x222222
+        }),
+        pcb: new THREE.MeshStandardMaterial({
+            color: 0x0066cc,
+            roughness: 0.7,
+            metalness: 0.3
+        }),
+        lock: new THREE.MeshStandardMaterial({
+            color: 0x444444,
+            roughness: 0.5,
+            metalness: 0.7
+        }),
+        led: new THREE.MeshStandardMaterial({
+            color: 0xffffaa,
+            emissive: 0xffffaa,
+            emissiveIntensity: 0.8
+        }),
+        plastic: new THREE.MeshPhongMaterial({
+            color: 0x1a1a1a,
+            shininess: 70
         })
     };
 }
