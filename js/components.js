@@ -18,7 +18,7 @@ export function createBackPanel(materials) {
     return group;
 }
 
-export function createTopBottomSides(materials) {
+export function createSides(materials) {
     const group = new THREE.Group();
     const { width, height, depth, thickness } = CONFIG.frame;
 
@@ -37,17 +37,24 @@ export function createTopBottomSides(materials) {
     rightSide.position.x = width/2;
     group.add(rightSide);
 
+    return group;
+}
+
+export function createTopBottom(materials) {
+    const group = new THREE.Group();
+    const { width, height, depth, thickness } = CONFIG.frame;
+
     // Top and bottom
     const top = new THREE.Mesh(
         new THREE.BoxGeometry(width, thickness, depth),
-        materials.plywood
+        materials.plywood4
     );
     top.position.y = height/2;
     group.add(top);
 
     const bottom = new THREE.Mesh(
         new THREE.BoxGeometry(width, thickness, depth),
-        materials.plywood
+        materials.plywood4
     );
     bottom.position.y = -height/2;
     group.add(bottom);
@@ -136,23 +143,155 @@ export function createDividers(rowIndex, materials) {
 }
 
 export function createCollectionBin(materials) {
+    const binDepth = CONFIG.frame.depth - 6; // Total bin area depth: 18
+    const slantedDepth = binDepth * 0.8; // 80% for slanted bin: 14.4
+
     const binFloor = new THREE.Mesh(
-        new THREE.BoxGeometry(CONFIG.frame.width, CONFIG.frame.thickness, CONFIG.frame.depth - 6),
+        new THREE.BoxGeometry(CONFIG.frame.width, CONFIG.frame.thickness, slantedDepth),
         materials.plywood
     );
-    binFloor.position.set(0, -CONFIG.frame.height/2 + 3, 3);
+    // Push back by 20% of the total depth
+    const zOffset = (binDepth * 0.2) / 2; // Half of the 20% we removed
+    binFloor.position.set(0, -CONFIG.frame.height/2 + 3, 3 - zOffset);
     binFloor.rotation.x = CONFIG.collection.slantAngle;
     return binFloor;
 }
 
-export function createGlassFront(materials) {
+export function createBinFlap(materials) {
+    // Calculate glass front bottom position
     const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
-    const glass = new THREE.Mesh(
-        new THREE.BoxGeometry(CONFIG.frame.width, glassHeight, CONFIG.glass.thickness),
+    const glassCenterY = CONFIG.slot.height/2;
+    const glassBottomY = glassCenterY - (glassHeight / 2);
+
+    // Border thickness
+    const borderThickness = 1.5;
+    const flapGap = 1.5; // Gap at bottom for flap clearance
+
+    // Flap goes from slightly above bottom of frame to bottom of glass border
+    const bottomY = -CONFIG.frame.height/2 + CONFIG.frame.thickness/2 + flapGap;
+    const topY = glassBottomY - (borderThickness / 2); // Touch bottom of glass border
+    const flapHeight = topY - bottomY;
+
+    const flap = new THREE.Mesh(
+        new THREE.BoxGeometry(CONFIG.frame.width - 4, flapHeight, CONFIG.glass.thickness),
         materials.glass
     );
-    glass.position.set(0, CONFIG.slot.height/2, CONFIG.shelves.depth/2 + CONFIG.glass.offset);
-    return glass;
+    // Position at the very front edge of the frame
+    const zPos = CONFIG.frame.depth / 2;
+    flap.position.set(0, bottomY + (flapHeight / 2), zPos);
+    return flap;
+}
+
+export function createBinFlapBorder(materials) {
+    const group = new THREE.Group();
+
+    // Calculate glass front bottom position
+    const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
+    const glassCenterY = CONFIG.slot.height/2;
+    const glassBottomY = glassCenterY - (glassHeight / 2);
+
+    const borderThickness = 1.5;
+
+    // Flap border matches flap height
+    const bottomY = -CONFIG.frame.height/2 + CONFIG.frame.thickness/2;
+    const topY = glassBottomY - (borderThickness / 2);
+    const flapHeight = topY - bottomY;
+
+    // Position at the very front edge of the frame
+    const zPos = CONFIG.frame.depth / 2;
+    const yPos = bottomY + (flapHeight / 2);
+
+    // Top border (horizontal)
+    const topBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness),
+        materials.aluminumBracket
+    );
+    topBorder.position.set(0, yPos + (flapHeight / 2), zPos);
+    group.add(topBorder);
+
+    // Bottom border (horizontal)
+    const bottomBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness),
+        materials.aluminumBracket
+    );
+    bottomBorder.position.set(0, yPos - (flapHeight / 2), zPos);
+    group.add(bottomBorder);
+
+    // Left border (vertical) - inset to not overflow frame
+    const leftBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(borderThickness, flapHeight, borderThickness),
+        materials.aluminumBracket
+    );
+    leftBorder.position.set(-CONFIG.frame.width / 2 + borderThickness / 2, yPos, zPos);
+    group.add(leftBorder);
+
+    // Right border (vertical) - inset to not overflow frame
+    const rightBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(borderThickness, flapHeight, borderThickness),
+        materials.aluminumBracket
+    );
+    rightBorder.position.set(CONFIG.frame.width / 2 - borderThickness / 2, yPos, zPos);
+    group.add(rightBorder);
+
+    return group;
+}
+
+export function createGlassFront(materials) {
+    const group = new THREE.Group();
+    const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
+
+    const glass = new THREE.Mesh(
+        new THREE.BoxGeometry(CONFIG.frame.width - 2, glassHeight, CONFIG.glass.thickness),
+        materials.glass
+    );
+    // Position at the very front edge of the frame (it's a door)
+    const zPos = CONFIG.frame.depth / 2;
+    glass.position.set(0, CONFIG.slot.height/2, zPos);
+    group.add(glass);
+
+    return group;
+}
+
+export function createGlassFrontBorder(materials) {
+    const group = new THREE.Group();
+    const glassHeight = CONFIG.grid.rows * CONFIG.slot.height;
+    const borderThickness = 1.5;
+    const zPos = CONFIG.frame.depth / 2;
+    const yPos = CONFIG.slot.height/2;
+
+    // Top border (horizontal)
+    const topBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness),
+        materials.aluminumBracket
+    );
+    topBorder.position.set(0, yPos + (glassHeight / 2), zPos);
+    group.add(topBorder);
+
+    // Bottom border (horizontal)
+    const bottomBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(CONFIG.frame.width, borderThickness, borderThickness),
+        materials.aluminumBracket
+    );
+    bottomBorder.position.set(0, yPos - (glassHeight / 2), zPos);
+    group.add(bottomBorder);
+
+    // Left border (vertical) - inset to not overflow frame
+    const leftBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(borderThickness, glassHeight, borderThickness),
+        materials.aluminumBracket
+    );
+    leftBorder.position.set(-CONFIG.frame.width / 2 + borderThickness / 2, yPos, zPos);
+    group.add(leftBorder);
+
+    // Right border (vertical) - inset to not overflow frame
+    const rightBorder = new THREE.Mesh(
+        new THREE.BoxGeometry(borderThickness, glassHeight, borderThickness),
+        materials.aluminumBracket
+    );
+    rightBorder.position.set(CONFIG.frame.width / 2 - borderThickness / 2, yPos, zPos);
+    group.add(rightBorder);
+
+    return group;
 }
 
 export function createMotorAssembly(row, col, materials) {
@@ -245,6 +384,38 @@ export function createPowerBox(materials) {
 
     powerBox.position.set(0, y, z);
     return powerBox;
+}
+
+export function createWheels(materials) {
+    const group = new THREE.Group();
+    const wheelRadius = 1;
+    const wheelThickness = 0.75;
+
+    // Bottom panel Y position
+    const bottomY = -CONFIG.frame.height/2;
+    const wheelY = bottomY - CONFIG.frame.thickness/2 - wheelRadius;
+
+    // Corner positions with slight inset from edges
+    const inset = 2;
+    const positions = [
+        { x: -CONFIG.frame.width/2 + inset, z: -CONFIG.frame.depth/2 + inset },  // Back-left
+        { x: CONFIG.frame.width/2 - inset, z: -CONFIG.frame.depth/2 + inset },   // Back-right
+        { x: -CONFIG.frame.width/2 + inset, z: CONFIG.frame.depth/2 - inset },   // Front-left
+        { x: CONFIG.frame.width/2 - inset, z: CONFIG.frame.depth/2 - inset }     // Front-right
+    ];
+
+    // Create 4 wheels at corners
+    positions.forEach(pos => {
+        const wheel = new THREE.Mesh(
+            new THREE.CylinderGeometry(wheelRadius, wheelRadius, wheelThickness, 16),
+            materials.motor // Using dark metallic material
+        );
+        wheel.rotation.z = Math.PI / 2; // Rotate to align along width
+        wheel.position.set(pos.x, wheelY, pos.z);
+        group.add(wheel);
+    });
+
+    return group;
 }
 
 export function createWiring(materials) {

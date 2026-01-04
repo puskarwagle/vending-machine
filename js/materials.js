@@ -17,6 +17,10 @@ export function createMaterials() {
     plywoodPanelTexture.wrapS = THREE.RepeatWrapping;
     plywoodPanelTexture.wrapT = THREE.RepeatWrapping;
 
+    const plywood4Texture = textureLoader.load('public/images/plywood-4.jpg');
+    plywood4Texture.wrapS = THREE.RepeatWrapping;
+    plywood4Texture.wrapT = THREE.RepeatWrapping;
+
     return {
         plywood: new THREE.MeshPhongMaterial({
             map: plywoodTexture,
@@ -28,6 +32,10 @@ export function createMaterials() {
         }),
         plywoodPanel: new THREE.MeshPhongMaterial({
             map: plywoodPanelTexture,
+            side: THREE.DoubleSide
+        }),
+        plywood4: new THREE.MeshPhongMaterial({
+            map: plywood4Texture,
             side: THREE.DoubleSide
         }),
         edge: new THREE.MeshPhongMaterial({
@@ -57,6 +65,12 @@ export function createMaterials() {
             color: 0xaaaaaa,
             shininess: 80,
             metalness: 0.8
+        }),
+        aluminumBracket: new THREE.MeshPhongMaterial({
+            color: 0xc0c0c0,
+            shininess: 60,
+            metalness: 0.7,
+            specular: 0xffffff
         })
     };
 }

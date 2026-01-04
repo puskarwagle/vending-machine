@@ -7,6 +7,7 @@ let cutlistViewers = [];
 let cutlistAnimationFrame = null;
 let viewerEventListeners = []; // Track event listeners for cleanup
 let globalAutoRotate = true; // Global rotation control
+let resizeTimeout = null; // Debounce resize events
 
 export function initializeCutListViewers() {
     // Clean up any existing viewers first
@@ -323,6 +324,12 @@ export function initializeCutListViewers() {
         let isHovered = false;
         let autoRotate = true;
 
+        // Touch state variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+        let lastTouchDistance = 0;
+        let isTouching = false;
+
         // Mouse enter/leave handlers
         const handleMouseEnter = () => {
             isHovered = true;
@@ -355,16 +362,105 @@ export function initializeCutListViewers() {
             }
         };
 
+        // Touch handlers for mobile/tablet interaction
+        const handleTouchStart = (e) => {
+            isTouching = true;
+
+            if (e.touches.length === 1) {
+                // Single touch - rotation
+                const rect = container.getBoundingClientRect();
+                touchStartX = e.touches[0].clientX - rect.left;
+                touchStartY = e.touches[0].clientY - rect.top;
+            } else if (e.touches.length === 2) {
+                // Two touches - pinch to zoom (calculate initial distance)
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+            }
+        };
+
+        const handleTouchMove = (e) => {
+            if (!isTouching) return;
+
+            // Prevent default scrolling when interacting with viewer
+            e.preventDefault();
+            e.stopPropagation();
+
+            if (e.touches.length === 1) {
+                // Single touch - rotate component
+                const rect = container.getBoundingClientRect();
+                const touchX = e.touches[0].clientX - rect.left;
+                const touchY = e.touches[0].clientY - rect.top;
+
+                const deltaX = touchX - touchStartX;
+                const deltaY = touchY - touchStartY;
+
+                component.rotation.y += deltaX * 0.01;
+                component.rotation.x += deltaY * 0.01;
+
+                touchStartX = touchX;
+                touchStartY = touchY;
+
+                // Temporarily disable auto-rotation
+                autoRotate = false;
+                clearTimeout(component.userData.autoRotateTimeout);
+                component.userData.autoRotateTimeout = setTimeout(() => {
+                    autoRotate = true;
+                }, 1000);
+            } else if (e.touches.length === 2) {
+                // Two touches - pinch to zoom
+                const dx = e.touches[0].clientX - e.touches[1].clientX;
+                const dy = e.touches[0].clientY - e.touches[1].clientY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                if (lastTouchDistance > 0) {
+                    const delta = distance - lastTouchDistance;
+                    // Adjust camera distance (zoom)
+                    const currentDistance = camera.position.length();
+                    const newDistance = Math.max(config.cameraDistance * 0.5, Math.min(config.cameraDistance * 1.5, currentDistance - delta * 0.1));
+                    const ratio = newDistance / currentDistance;
+
+                    camera.position.set(
+                        camera.position.x * ratio,
+                        camera.position.y * ratio,
+                        camera.position.z * ratio
+                    );
+                    camera.lookAt(0, 0, 0);
+                }
+
+                lastTouchDistance = distance;
+            }
+        };
+
+        const handleTouchEnd = (e) => {
+            if (e.touches.length === 0) {
+                isTouching = false;
+                lastTouchDistance = 0;
+            } else if (e.touches.length === 1) {
+                // Reset single touch when one finger is lifted during pinch
+                const rect = container.getBoundingClientRect();
+                touchStartX = e.touches[0].clientX - rect.left;
+                touchStartY = e.touches[0].clientY - rect.top;
+                lastTouchDistance = 0;
+            }
+        };
+
         // Add event listeners
         container.addEventListener('mouseenter', handleMouseEnter);
         container.addEventListener('mouseleave', handleMouseLeave);
         container.addEventListener('wheel', handleWheel, { passive: false });
+        container.addEventListener('touchstart', handleTouchStart, { passive: false });
+        container.addEventListener('touchmove', handleTouchMove, { passive: false });
+        container.addEventListener('touchend', handleTouchEnd, { passive: false });
 
         // Track listeners for cleanup
         viewerEventListeners.push(
             { element: container, event: 'mouseenter', handler: handleMouseEnter },
             { element: container, event: 'mouseleave', handler: handleMouseLeave },
-            { element: container, event: 'wheel', handler: handleWheel }
+            { element: container, event: 'wheel', handler: handleWheel },
+            { element: container, event: 'touchstart', handler: handleTouchStart },
+            { element: container, event: 'touchmove', handler: handleTouchMove },
+            { element: container, event: 'touchend', handler: handleTouchEnd }
         );
 
         // Store viewer data
@@ -377,6 +473,30 @@ export function initializeCutListViewers() {
             autoRotate: () => autoRotate
         });
     });
+
+    // Add window resize handler
+    const handleResize = () => {
+        // Debounce resize events
+        if (resizeTimeout) {
+            clearTimeout(resizeTimeout);
+        }
+        resizeTimeout = setTimeout(() => {
+            cutlistViewers.forEach(viewer => {
+                const container = document.getElementById(`viewer-${viewer.id}`);
+                if (container) {
+                    const width = container.clientWidth;
+                    const height = container.clientHeight;
+
+                    viewer.camera.aspect = width / height;
+                    viewer.camera.updateProjectionMatrix();
+                    viewer.renderer.setSize(width, height);
+                }
+            });
+        }, 100);
+    };
+
+    window.addEventListener('resize', handleResize);
+    viewerEventListeners.push({ element: window, event: 'resize', handler: handleResize });
 
     // Start animation loop
     animateCutListViewers();
@@ -408,6 +528,12 @@ export function cleanupCutListViewers() {
     if (cutlistAnimationFrame) {
         cancelAnimationFrame(cutlistAnimationFrame);
         cutlistAnimationFrame = null;
+    }
+
+    // Clear resize timeout
+    if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = null;
     }
 
     // Remove event listeners

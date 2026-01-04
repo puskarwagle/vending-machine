@@ -3,23 +3,28 @@ import { CONFIG } from './config.js';
 import { createMaterials } from './materials.js';
 import {
     createBackPanel,
-    createTopBottomSides,
+    createSides,
+    createTopBottom,
     createShelf,
     createRails,
     createDividers,
     createCollectionBin,
+    createBinFlap,
+    createBinFlapBorder,
     createGlassFront,
+    createGlassFrontBorder,
     createMotorAssembly,
     createPowerBox,
-    createWiring
+    createWiring,
+    createWheels
 } from './components.js';
 import { generateMenuHTML, generateCutList } from './ui.js';
 import { initializeCutListViewers, cleanupCutListViewers, pauseCutListViewers, playCutListViewers } from './cutlist-viewers.js';
 
 // Module state variables
 let scene, camera, renderer;
-let frameGroup, topBottomSidesGroup, backPanelGroup, internalFrame, glassFront, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
-let shelvesGroup, railsGroup, dividersGroup, powerBoxGroup, collectionBinGroup;
+let frameGroup, sidesGroup, topBottomGroup, backPanelGroup, internalFrame, glassFront, glassFrontBorderGroup, motorsGroup, clampsGroup, spiralsGroup, wiringGroup;
+let shelvesGroup, railsGroup, dividersGroup, powerBoxGroup, collectionBinGroup, binFlapGroup, binFlapBorderGroup, wheelsGroup;
 let mouseDown = false, mouseX = 0, mouseY = 0;
 let isPartsView = false;
 let isPaused = false;
@@ -162,24 +167,29 @@ function assembleAnimation(menuToggles) {
     });
     setDirty();
 
-    // Assembly order (inner to outer)
+    // Assembly order (bottom to top, inside to outside)
     const assemblyOrder = [
-        'toggle-powerbox',      // 1. Power Box (innermost)
-        'toggle-collectionbin', // 2. Collection Bin
+        'toggle-shelves',       // 1. Shelves
+        'toggle-rails',         // 2. Rails
         'toggle-backpanel',     // 3. Back Panel
-        'toggle-topbottomsides',// 4. Top Bottom Sides
-        'toggle-shelves',       // 5. Shelves
-        'toggle-rails',         // 6. Rails
-        'toggle-dividers',      // 7. Dividers
+        'toggle-clamps',        // 4. Clamps
+        'toggle-motors',        // 5. Motors
+        'toggle-dividers',      // 6. Dividers
+        'toggle-spirals',       // 7. Spirals
         'toggle-wiring',        // 8. Wiring
-        'toggle-motors',        // 9. Motors
-        'toggle-clamps',        // 10. Clamps
-        'toggle-spirals',       // 11. Spirals
-        'toggle-glass'          // 12. Glass Front (outermost)
+        'toggle-wheels',        // 9. Wheels
+        'toggle-topbottom',     // 10. Bottom Panel
+        'toggle-powerbox',      // 11. Power Box
+        'toggle-collectionbin', // 12. Collection Bin
+        'toggle-binflap',       // 13. Bin Flap
+        'toggle-binflapborder', // 14. Flap Border
+        'toggle-glass',         // 15. Glass Front
+        'toggle-glassfrontborder', // 16. Glass Border
+        'toggle-sides'          // 17. Top and Sides
     ];
 
-    // Delay between each component (2 seconds)
-    const delay = 2000;
+    // Delay between each component (0.5 seconds)
+    const delay = 500;
 
     // Show components sequentially
     assemblyOrder.forEach((toggleId, index) => {
@@ -256,9 +266,13 @@ function init() {
     frameGroup = new THREE.Group();
     scene.add(frameGroup);
 
-    // Top Bottom Sides group
-    topBottomSidesGroup = new THREE.Group();
-    frameGroup.add(topBottomSidesGroup);
+    // Sides group
+    sidesGroup = new THREE.Group();
+    frameGroup.add(sidesGroup);
+
+    // Top Bottom group
+    topBottomGroup = new THREE.Group();
+    frameGroup.add(topBottomGroup);
 
     // Back Panel group
     backPanelGroup = new THREE.Group();
@@ -299,24 +313,57 @@ function init() {
     collectionBinGroup = new THREE.Group();
     frameGroup.add(collectionBinGroup);
 
+    // Bin Flap Group
+    binFlapGroup = new THREE.Group();
+    frameGroup.add(binFlapGroup);
+
+    // Bin Flap Border Group
+    binFlapBorderGroup = new THREE.Group();
+    frameGroup.add(binFlapBorderGroup);
+
+    // Glass Front Border Group
+    glassFrontBorderGroup = new THREE.Group();
+    frameGroup.add(glassFrontBorderGroup);
+
+    // Wheels Group
+    wheelsGroup = new THREE.Group();
+    frameGroup.add(wheelsGroup);
+
     // Create materials
     materials = createMaterials();
 
-    // Create top bottom sides
-    const topBottomSides = createTopBottomSides(materials);
-    topBottomSidesGroup.add(...topBottomSides.children);
+    // Create sides
+    const sides = createSides(materials);
+    sidesGroup.add(...sides.children);
+
+    // Create top and bottom
+    const topBottom = createTopBottom(materials);
+    topBottomGroup.add(...topBottom.children);
 
     // Create back panel
     const backPanel = createBackPanel(materials);
     backPanelGroup.add(...backPanel.children);
 
     // Create glass front
-    glassFront = createGlassFront(materials);
+    const glassFrontGroup = createGlassFront(materials);
+    glassFront = glassFrontGroup;
     frameGroup.add(glassFront);
+
+    // Create glass front border
+    const glassFrontBorder = createGlassFrontBorder(materials);
+    glassFrontBorderGroup.add(...glassFrontBorder.children);
 
     // Create collection bin
     const binFloor = createCollectionBin(materials);
     collectionBinGroup.add(binFloor);
+
+    // Create bin flap
+    const binFlap = createBinFlap(materials);
+    binFlapGroup.add(binFlap);
+
+    // Create bin flap border
+    const binFlapBorder = createBinFlapBorder(materials);
+    binFlapBorderGroup.add(...binFlapBorder.children);
 
     // Create Power Box
     const powerBox = createPowerBox(materials);
@@ -325,6 +372,10 @@ function init() {
     // Create Wiring
     const wiring = createWiring(materials);
     wiringGroup.add(wiring);
+
+    // Create Wheels
+    const wheels = createWheels(materials);
+    wheelsGroup.add(wheels);
 
     // Create shelves for each row
     for (let i = 1; i <= CONFIG.grid.rows; i++) {
@@ -366,24 +417,30 @@ function init() {
     const zoomOutBtn = document.getElementById('zoom-out');
     const assembleButton = document.getElementById('assemble-button');
     const toggleAllComponents = document.getElementById('toggle-all-components');
+    const drawerToggle = document.getElementById('drawer-toggle');
 
     // Initialize slider to current camera distance (inverted scale)
     zoomSlider.value = 180 - camera.position.length();
 
     // Menu toggle configuration - maps toggle IDs to their target groups
     const menuToggles = [
-        { id: 'toggle-topbottomsides', target: () => topBottomSidesGroup },
+        { id: 'toggle-sides', target: () => sidesGroup },
+        { id: 'toggle-topbottom', target: () => topBottomGroup },
         { id: 'toggle-backpanel', target: () => backPanelGroup },
+        { id: 'toggle-wheels', target: () => wheelsGroup },
         { id: 'toggle-shelves', target: () => shelvesGroup },
         { id: 'toggle-rails', target: () => railsGroup },
         { id: 'toggle-dividers', target: () => dividersGroup },
         { id: 'toggle-glass', target: () => glassFront },
+        { id: 'toggle-glassfrontborder', target: () => glassFrontBorderGroup },
         { id: 'toggle-motors', target: () => motorsGroup },
         { id: 'toggle-clamps', target: () => clampsGroup },
         { id: 'toggle-spirals', target: () => spiralsGroup },
         { id: 'toggle-wiring', target: () => wiringGroup },
         { id: 'toggle-powerbox', target: () => powerBoxGroup },
-        { id: 'toggle-collectionbin', target: () => collectionBinGroup }
+        { id: 'toggle-collectionbin', target: () => collectionBinGroup },
+        { id: 'toggle-binflap', target: () => binFlapGroup },
+        { id: 'toggle-binflapborder', target: () => binFlapBorderGroup }
     ];
 
     // Zoom controls - maintains camera angle while zooming
@@ -433,6 +490,13 @@ function init() {
         renderer.domElement.style.display = 'block';
         partsOverlay.classList.remove('active');
         document.body.style.background = '';
+
+        // Clean up floating menu button event listener
+        const partsOverlayMenuBtn = document.getElementById('parts-overlay-menu-btn');
+        if (partsOverlayMenuBtn && partsOverlayMenuBtn._toggleDrawerHandler) {
+            partsOverlayMenuBtn.removeEventListener('click', partsOverlayMenuBtn._toggleDrawerHandler);
+            delete partsOverlayMenuBtn._toggleDrawerHandler;
+        }
 
         // Clean up cut list viewers
         cleanupCutListViewers();
@@ -515,6 +579,19 @@ function init() {
             assembleButton.dataset.active = 'false';
             assembleButton.classList.remove('bg-base-content/20', 'border-base-content/40');
             assembleButton.classList.add('border-base-content/20');
+
+            // Add event listener for floating menu button (created dynamically)
+            requestAnimationFrame(() => {
+                const partsOverlayMenuBtn = document.getElementById('parts-overlay-menu-btn');
+                if (partsOverlayMenuBtn) {
+                    const toggleDrawer = () => {
+                        drawerToggle.click();
+                    };
+                    partsOverlayMenuBtn.addEventListener('click', toggleDrawer);
+                    // Store the handler for cleanup
+                    partsOverlayMenuBtn._toggleDrawerHandler = toggleDrawer;
+                }
+            });
         } else {
             switchTo3DView();
         }
@@ -522,18 +599,23 @@ function init() {
 
     // Mapping between toggle buttons and component viewers
     const toggleToComponentMap = {
-        'toggle-topbottomsides': 'viewer-top-bottom',
+        'toggle-sides': 'viewer-sides',
+        'toggle-topbottom': 'viewer-top-bottom',
         'toggle-backpanel': 'viewer-back',
         'toggle-shelves': 'viewer-shelf',
         'toggle-rails': 'viewer-rails',
-        'toggle-dividers': 'viewer-shelf',
+        'toggle-dividers': 'viewer-dividers',
         'toggle-glass': 'viewer-glass',
+        'toggle-glassfrontborder': 'viewer-glassfrontborder',
         'toggle-motors': 'viewer-motor',
-        'toggle-clamps': 'viewer-motor',
-        'toggle-spirals': 'viewer-motor',
+        'toggle-clamps': 'viewer-clamps',
+        'toggle-spirals': 'viewer-spirals',
         'toggle-wiring': 'viewer-wiring',
         'toggle-powerbox': 'viewer-powerbox',
-        'toggle-collectionbin': 'viewer-bin'
+        'toggle-collectionbin': 'viewer-bin',
+        'toggle-binflap': 'viewer-binflap',
+        'toggle-binflapborder': 'viewer-binflapborder',
+        'toggle-wheels': 'viewer-wheels'
     };
 
     // Setup visibility toggles dynamically
@@ -585,7 +667,8 @@ function init() {
         toggle.target().visible = isActive;
     });
 
-    addTrackedListener(togglePause, 'click', () => {
+    // Helper function to toggle play/pause
+    function togglePlayPause() {
         isPaused = !isPaused;
         const isPlaying = !isPaused;
 
@@ -603,13 +686,30 @@ function init() {
         } else {
             pauseIcon.style.display = 'none';
             playIcon.style.display = 'block';
-            // Set to front view when paused
-            frameGroup.rotation.set(0, Math.PI * 0.25, 0);
             // Pause cutlist viewers rotation
             pauseCutListViewers();
         }
 
         setDirty();
+    }
+
+    addTrackedListener(togglePause, 'click', togglePlayPause);
+
+    // Spacebar to toggle play/pause (except when typing in inputs)
+    addTrackedListener(document, 'keydown', (e) => {
+        if (e.code === 'Space' || e.key === ' ') {
+            const activeElement = document.activeElement;
+            const isTyping = activeElement && (
+                activeElement.tagName === 'INPUT' ||
+                activeElement.tagName === 'TEXTAREA' ||
+                activeElement.isContentEditable
+            );
+
+            if (!isTyping) {
+                e.preventDefault();
+                togglePlayPause();
+            }
+        }
     });
 
     // Toggle all components handler
@@ -646,6 +746,11 @@ function init() {
         // If in parts view, switch back to 3D view first
         if (isPartsView) {
             switchTo3DView();
+        }
+
+        // Close drawer on mobile/tablet (when screen width < 1024px lg breakpoint)
+        if (window.innerWidth < 1024) {
+            drawerToggle.checked = false;
         }
 
         // Update button states

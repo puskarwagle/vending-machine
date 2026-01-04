@@ -125,11 +125,46 @@ canvas {
     display: block;
 }
 
+/* Ensure drawer appears above parts overlay on mobile */
+.drawer-side {
+    z-index: 20 !important;
+}
+
 /* Adjust parts overlay for drawer on desktop */
 @media (min-width: 1024px) {
     #parts-overlay {
         left: 320px;
         width: calc(100% - 320px);
+    }
+}
+
+/* Floating menu/back button for mobile in parts view */
+#parts-overlay-menu-btn {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 50;
+    display: none;
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    color: white;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(4px);
+}
+
+#parts-overlay.active #parts-overlay-menu-btn {
+    display: flex;
+}
+
+/* Hide floating button on desktop since drawer is accessible */
+@media (min-width: 1024px) {
+    #parts-overlay-menu-btn {
+        display: none !important;
     }
 }
 
@@ -161,6 +196,13 @@ canvas {
     width: 100%;
     display: flex;
     flex-direction: column;
+}
+
+/* Add top padding on mobile to avoid floating button overlap */
+@media (max-width: 1023px) {
+    .component-list {
+        padding-top: 60px;
+    }
 }
 
 /* Component item */
@@ -254,4 +296,129 @@ canvas {
     border: none;
     color: #fff;
     font-style: normal;
+}
+
+/* Responsive styles for mobile and tablet */
+/* Tablet (medium screens) */
+@media (max-width: 1024px) and (min-width: 768px) {
+    .component-item {
+        padding: 30px 20px;
+        gap: 20px;
+        /* Stack vertically on smaller tablets to prevent overflow */
+        flex-direction: column !important;
+        justify-content: center;
+    }
+
+    .component-viewer {
+        width: 100%;
+        max-width: 450px;
+        height: 450px;
+    }
+
+    .component-card {
+        width: 100%;
+        max-width: 450px;
+        max-height: none;
+        padding: 25px;
+    }
+
+    .component-title {
+        font-size: 26px;
+    }
+}
+
+/* Mobile (small screens) */
+@media (max-width: 767px) {
+    /* Adjust parts overlay for mobile - remove desktop offset */
+    #parts-overlay {
+        left: 0;
+        width: 100%;
+        /* Softer scroll-snap on mobile for better user control */
+        scroll-snap-type: y proximity;
+    }
+
+    .component-item {
+        flex-direction: column !important; /* Override layout-left/right */
+        padding: 20px 15px;
+        gap: 20px;
+        min-height: 100vh;
+        height: auto;
+        /* Softer snap alignment */
+        scroll-snap-align: center;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .component-viewer {
+        width: 100%;
+        max-width: 100%;
+        height: 45vh;
+        min-height: 250px;
+        max-height: 350px;
+        flex-shrink: 0;
+    }
+
+    .component-card {
+        width: 100%;
+        max-width: 100%;
+        max-height: none;
+        padding: 20px;
+        flex-shrink: 1;
+        overflow-y: auto;
+    }
+
+    .component-title {
+        font-size: 22px;
+        padding-bottom: 10px;
+    }
+
+    .component-specs {
+        gap: 10px;
+    }
+
+    .spec-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+        padding: 8px 0;
+    }
+
+    .spec-label {
+        min-width: auto;
+        font-weight: bold;
+    }
+
+    .spec-value {
+        text-align: left;
+    }
+}
+
+/* Extra small mobile screens */
+@media (max-width: 480px) {
+    .component-item {
+        padding: 15px 10px;
+        gap: 15px;
+    }
+
+    .component-viewer {
+        height: 40vh;
+        min-height: 200px;
+        max-height: 280px;
+    }
+
+    .component-card {
+        padding: 15px;
+    }
+
+    .component-title {
+        font-size: 20px;
+    }
+
+    .component-specs {
+        gap: 8px;
+    }
+
+    .spec-row {
+        padding: 6px 0;
+    }
 }
